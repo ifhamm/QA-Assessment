@@ -1,0 +1,1298 @@
+{
+  "info": {
+    "_postman_id": "79d4aaa3-67a0-497c-be95-551d03261eee",
+    "name": "QA-Portofolio",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "37860963"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const runId = pm.variables.replaceIn('{{$randomUUID}}');\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"ownerUsername\",\r",
+              "    `owner_${runId}`\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"ownerEmail\",\r",
+              "    `owner_${runId}@example.com`\r",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Registration returns expected status\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains user\", function () {\r",
+              "    pm.expect(json.user).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Username matches submitted username\", function () {\r",
+              "    pm.expect(json.user.username)\r",
+              "        .to.eql(pm.variables.get(\"ownerUsername\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Email matches submitted email\", function () {\r",
+              "    pm.expect(json.user.email)\r",
+              "        .to.eql(pm.variables.get(\"ownerEmail\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Registration returns a token\", function () {\r",
+              "    pm.expect(json.user.token)\r",
+              "        .to.be.a(\"string\")\r",
+              "        .and.not.be.empty;\r",
+              "});\r",
+              "\r",
+              "pm.collectionVariables.set(\"ownerToken\",json.user.token);\r",
+              "pm.collectionVariables.set(\"ownerEmail\", json.user.email);\r",
+              "pm.collectionVariables.set(\"ownerUsername\", json.user.username);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"user\": {\r\n    \"username\": \"{{ownerUsername}}\",\r\n    \"email\": \"{{ownerEmail}}\",\r\n    \"password\": \"{{password}}\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Get current user returns success\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains user\", function () {\r",
+              "    pm.expect(json.user).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Authenticated user email is correct\", function () {\r",
+              "    pm.expect(json.user.email)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerEmail\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Authenticated username is correct\", function () {\r",
+              "    pm.expect(json.user.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/user",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "user"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Successful Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Login returns 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Login returns correct user\", function () {\r",
+              "    pm.expect(json.user.email)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerEmail\"));\r",
+              "\r",
+              "    pm.expect(json.user.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Login returns authentication token\", function () {\r",
+              "    pm.expect(json.user.token)\r",
+              "        .to.be.a(\"string\")\r",
+              "        .and.not.be.empty;\r",
+              "});\r",
+              "\r",
+              "pm.collectionVariables.set(\"ownerToken\",json.user.token);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"user\": {\r\n    \"email\": \"{{ownerEmail}}\",\r\n    \"password\": \"{{password}}\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Article",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const runId = pm.variables.replaceIn('{{$randomUUID}}');\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"articleTitle\",\r",
+              "    `QA Test Article ${runId}`\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"articleDescription\",\r",
+              "    `Article created during API testing ${runId}`\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"articleBody\",\r",
+              "    `This article is created automatically for API testing ${runId}.`\r",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Create Article returns 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains article\", function () {\r",
+              "    pm.expect(json.article).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Title matches submitted value\", function () {\r",
+              "    pm.expect(json.article.title)\r",
+              "        .to.eql(pm.collectionVariables.get(\"articleTitle\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Description matches submitted value\", function () {\r",
+              "    pm.expect(json.article.description)\r",
+              "        .to.eql(pm.collectionVariables.get(\"articleDescription\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Body matches submitted value\", function () {\r",
+              "    pm.expect(json.article.body)\r",
+              "        .to.eql(pm.collectionVariables.get(\"articleBody\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Article is created by authenticated user\", function () {\r",
+              "    pm.expect(json.article.author.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Article has a slug\", function () {\r",
+              "    pm.expect(json.article.slug)\r",
+              "        .to.be.a(\"string\")\r",
+              "        .and.not.be.empty;\r",
+              "});\r",
+              "\r",
+              "pm.collectionVariables.set(\"ownerArticleSlug\", json.article.slug);\r",
+              "pm.collectionVariables.set(\"ownerArticleTitle\", json.article.title);\r",
+              "pm.collectionVariables.set(\"ownerArticleDescription\", json.article.description)"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"article\": {\r\n    \"title\": \"{{articleTitle}}\",\r\n    \"description\": \"{{articleDescription}}\",\r\n    \"body\": \"{{articleBody}}\",\r\n    \"tagList\": [\r\n      \"qa\",\r\n      \"automation\"\r\n    ]\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Article",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Get Article returns 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains article\", function () {\r",
+              "    pm.expect(json.article).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Slug matches created article\", function () {\r",
+              "    pm.expect(json.article.slug)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerArticleSlug\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Title matches created article\", function () {\r",
+              "    pm.expect(json.article.title)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerArticleTitle\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Description matches created article\", function () {\r",
+              "    pm.expect(json.article.description)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerArticleDescription\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Body matches created article\", function () {\r",
+              "    pm.expect(json.article.body)\r",
+              "        .to.eql(pm.collectionVariables.get(\"articleBody\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Article belongs to authenticated user\", function () {\r",
+              "    pm.expect(json.article.author.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"article\": {\r\n    \"title\": \"{{ownerArticleTitle}}\",\r\n    \"description\": \"\",\r\n    \"body\": \"{{newArticleBody}}\",\r\n    \"tagList\": [\r\n      \"qa\",\r\n      \"automation\"\r\n    ]\r\n  }\r\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{ownerArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{ownerArticleSlug}}"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Article",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const runId = pm.variables.replaceIn('{{$randomUUID}}');\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"newArticleTitle\",\r",
+              "    `Updated QA Test Article ${runId}`\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"newArticleDescription\",\r",
+              "    `Updated article description ${runId}`\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"newArticleBody\",\r",
+              "    `This article body has been updated during API testing ${runId}.`\r",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Update Article returns 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains article\", function () {\r",
+              "    pm.expect(json.article).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Title is updated\", function () {\r",
+              "    pm.expect(json.article.title)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleTitle\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Description is updated\", function () {\r",
+              "    pm.expect(json.article.description)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleDescription\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Body is updated\", function () {\r",
+              "    pm.expect(json.article.body)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleBody\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Article remains owned by authenticated user\", function () {\r",
+              "    pm.expect(json.article.author.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Updated timestamp exists\", function () {\r",
+              "    pm.expect(json.article.updatedAt)\r",
+              "        .to.be.a(\"string\")\r",
+              "        .and.not.be.empty;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Slug exists after update\", function () {\r",
+              "    pm.expect(json.article.slug)\r",
+              "        .to.be.a(\"string\")\r",
+              "        .and.not.be.empty;\r",
+              "});\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"newArticleSlug\",\r",
+              "    json.article.slug\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"newArticleTitle\",\r",
+              "    json.article.title\r",
+              ")\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"newArticleDescription\",\r",
+              "    json.article.description\r",
+              ")"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"article\": {\r\n    \"title\": \"{{newArticleTitle}}\",\r\n    \"description\": \"{{newArticleDescription}}\",\r\n    \"body\": \"{{newArticleBody}}\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{ownerArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{ownerArticleSlug}}"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Updated Article",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Get updated article returns 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains article\", function () {\r",
+              "    pm.expect(json.article).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Slug matches updated article\", function () {\r",
+              "    pm.expect(json.article.slug)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleSlug\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Updated title is persisted\", function () {\r",
+              "    pm.expect(json.article.title)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleTitle\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Updated description is persisted\", function () {\r",
+              "    pm.expect(json.article.description)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleDescription\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Updated body is persisted\", function () {\r",
+              "    pm.expect(json.article.body)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleBody\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Article remains owned by authenticated user\", function () {\r",
+              "    pm.expect(json.article.author.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": null,
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register Other User",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const runId = pm.variables.replaceIn('{{$randomUUID}}');\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"otherUsername\",\r",
+              "    `other_${runId}`\r",
+              ");\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"otherEmail\",\r",
+              "    `other_${runId}@example.com`\r",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.collectionVariables.set(\r",
+              "    \"otherToken\",\r",
+              "    json.user.token\r",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"user\": {\r\n    \"username\": \"{{otherUsername}}\",\r\n    \"email\": \"{{otherEmail}}\",\r\n    \"password\": \"{{password}}\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Unauthorized Update",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Other user cannot update owner's article\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{otherToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"article\": {\r\n    \"title\": \"{{unauthorizedUpdateTitle}}\"\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Verify Owner Article Unchanged",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Owner article is still available\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Unauthorized update did not change title\", function () {\r",
+              "    pm.expect(json.article.title)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleTitle\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Unauthorized update did not change description\", function () {\r",
+              "    pm.expect(json.article.description)\r",
+              "        .to.eql(pm.collectionVariables.get(\"newArticleDescription\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Article still belongs to owner\", function () {\r",
+              "    pm.expect(json.article.author.username)\r",
+              "        .to.eql(pm.collectionVariables.get(\"ownerUsername\"));\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Article Missing Title",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Missing title request is rejected\", function () {\r",
+              "    pm.response.to.have.status(422);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains title validation error\", function () {\r",
+              "    pm.expect(json.errors).to.exist;\r",
+              "    pm.expect(json.errors.title).to.exist;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"article\": {\r\n    \"description\": \"Invalid article without title\",\r\n    \"body\": \"This request should be rejected.\",\r\n    \"tagList\": [\r\n      \"qa\"\r\n    ]\r\n  }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Favorite Article",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Article is favorited\", function () {\r",
+              "    pm.expect(json.article.favorited).to.eql(true);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Favorites count is greater than zero\", function () {\r",
+              "    pm.expect(json.article.favoritesCount).to.be.above(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}/favorite",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}",
+            "favorite"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Unfavorite Article",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Article is unfavorited\", function () {\r",
+              "    pm.expect(json.article.favorited).to.eql(false);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}/favorite",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}",
+            "favorite"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Article",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Delete Article returns 204\", function () {\r",
+              "    pm.response.to.have.status(204);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Verify Article Deleted",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Deleted article is no longer available\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "Token {{ownerToken}}",
+              "type": "string"
+            },
+            {
+              "key": "key",
+              "value": "Authorization",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/articles/{{newArticleSlug}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "articles",
+            "{{newArticleSlug}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "newArticleTitle",
+      "value": ""
+    },
+    {
+      "key": "newArticleDescription",
+      "value": ""
+    },
+    {
+      "key": "newArticleBody",
+      "value": ""
+    },
+    {
+      "key": "articleCreatedAt",
+      "value": ""
+    },
+    {
+      "key": "newArticleSlug",
+      "value": ""
+    },
+    {
+      "key": "ownerUsername",
+      "value": ""
+    },
+    {
+      "key": "ownerEmail",
+      "value": ""
+    },
+    {
+      "key": "ownerToken",
+      "value": ""
+    },
+    {
+      "key": "otherUsername",
+      "value": ""
+    },
+    {
+      "key": "otherEmail",
+      "value": ""
+    },
+    {
+      "key": "otherToken",
+      "value": ""
+    },
+    {
+      "key": "ownerArticleSlug",
+      "value": ""
+    },
+    {
+      "key": "ownerArticleTitle",
+      "value": ""
+    },
+    {
+      "key": "ownerArticleDescription",
+      "value": ""
+    },
+    {
+      "key": "unauthorizedUpdateTitle",
+      "value": ""
+    },
+    {
+      "key": "unauthorizedUpdateDescription",
+      "value": ""
+    },
+    {
+      "key": "articleTitle",
+      "value": ""
+    },
+    {
+      "key": "articleDescription",
+      "value": ""
+    },
+    {
+      "key": "articleBody",
+      "value": ""
+    }
+  ]
+}
