@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+env:
+  BASE_URL: ${{ vars.BASE_URL }}
+  API_BASE_URL: ${{ vars.API_BASE_URL }}
+
 jobs:
   api-tests:
     name: API Tests
