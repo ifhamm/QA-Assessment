@@ -1,0 +1,13 @@
+{
+  "name": "performance",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js",
+    "test:perf": "k6 run k6/products-performance.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
