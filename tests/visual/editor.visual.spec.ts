@@ -22,10 +22,8 @@ test("article editor matches visual baseline", async ({ page, request }) => {
 
     await navBar.expectLoggedIn(user.username);
 
-    // Baru masuk ke editor
     await page.goto("/editor");
 
-    // Pastikan editor benar-benar sudah render
     await expect(
         page.getByPlaceholder("Article Title")
     ).toBeVisible();

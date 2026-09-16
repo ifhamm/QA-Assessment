@@ -29,13 +29,13 @@ export class EditorPage {
     title: string;
     description: string;
     body: string;
-    tags?: string[];
+    tagList?: string[];
   }) {
     await this.titleInput.fill(data.title);
     await this.descriptionInput.fill(data.description);
     await this.bodyInput.fill(data.body);
-    if (data.tags) {
-      for (const tag of data.tags) {
+    if (data.tagList) {
+      for (const tag of data.tagList) {
         await this.tagsInput.fill(tag);
         await this.tagsInput.press("Enter");
       }
