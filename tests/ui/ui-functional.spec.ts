@@ -1,6 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { LoginPage } from "../../pages/login.page";
-import { EditorPage } from "../../pages/editor.page";
+import { test, expect } from "../../fixtures/test-base";
 import { ArticlePage } from "../../pages/article.page";
 import { NavBar } from "../../pages/navbar.component";
 import { ConduitAPI } from "../../api/conduit-api";
@@ -8,9 +6,12 @@ import { syntheticArticle, syntheticUser } from "../test-data";
 
 test.describe("UI Functional Tests", () => {
   // ─── Test 1: Successful login → create article workflow ─────────────
-  test("login and create a new article", async ({ page, request }) => {
-    const loginPage = new LoginPage(page);
-    const editorPage = new EditorPage(page);
+  test("login and create a new article", async ({
+    page,
+    request,
+    loginPage,
+    editorPage,
+  }) => {
     const articlePage = new ArticlePage(page);
     const navBar = new NavBar(page);
     const api = new ConduitAPI(request);
@@ -55,8 +56,7 @@ test.describe("UI Functional Tests", () => {
   });
 
   // ─── Test 2: Invalid login ─────────────────────────────────────────
-  test("shows error on invalid credentials", async ({ page }) => {
-    const loginPage = new LoginPage(page);
+  test("shows error on invalid credentials", async ({ page, loginPage }) => {
     const testUser = syntheticUser();
 
     await loginPage.goto();
