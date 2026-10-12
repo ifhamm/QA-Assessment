@@ -52,6 +52,30 @@ export class ConduitAPI {
     return json.user;
   }
 
+  /**
+   * Attempts to delete the authenticated user.
+   *
+   * The RealWorld API used by this project does not expose user deletion.
+   * A 405 is therefore reported as an unsupported cleanup operation.
+   */
+  async deleteUser(token: string): Promise<boolean> {
+    const res = await this.request.delete(`${API_BASE}/user`, {
+      headers: { Authorization: `Token ${token}` },
+    });
+    if (res.status() === 405) {
+      console.warn(
+        "Cleanup: user deletion is not supported by the configured API."
+      );
+      return false;
+    }
+    if (!res.ok()) {
+      throw new Error(
+        `Delete user failed: ${res.status()} ${await res.text()}`
+      );
+    }
+    return true;
+  }
+
   /** Creates an article. */
   async createArticle(token: string, article: ArticleData): Promise<Article> {
     const res = await this.request.post(`${API_BASE}/articles`, {

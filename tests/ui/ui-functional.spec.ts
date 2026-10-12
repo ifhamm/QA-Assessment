@@ -1,31 +1,26 @@
 import { test, expect } from "../../fixtures/test-base";
 import { ArticlePage } from "../../pages/article.page";
 import { NavBar } from "../../pages/navbar.component";
-import { ConduitAPI } from "../../api/conduit-api";
 import { syntheticArticle, syntheticUser } from "../test-data";
 
 test.describe("UI Functional Tests", () => {
   // ─── Test 1: Successful login → create article workflow ─────────────
   test("login and create a new article", async ({
     page,
-    request,
+    api,
     loginPage,
     editorPage,
+    user,
   }) => {
     const articlePage = new ArticlePage(page);
     const navBar = new NavBar(page);
-    const api = new ConduitAPI(request);
-
-    // Register test user.
-    const testUser = syntheticUser();
-    await api.registerUser(testUser.username, testUser.email, testUser.password);
 
     // Authenticate via UI.
     await loginPage.goto();
-    await loginPage.login(testUser.email, testUser.password);
+    await loginPage.login(user.email, user.password);
 
     // Assert authentication.
-    await navBar.expectLoggedIn(testUser.username);
+    await navBar.expectLoggedIn(user.username);
 
     // Create article via UI.
     const articleData = syntheticArticle("UICreate");
@@ -49,7 +44,7 @@ test.describe("UI Functional Tests", () => {
     } finally {
       // Teardown: delete article.
       if (createdSlug) {
-        const cleanupUser = await api.login(testUser.email, testUser.password);
+        const cleanupUser = await api.login(user.email, user.password);
         await api.deleteArticle(cleanupUser.token, createdSlug);
       }
     }
