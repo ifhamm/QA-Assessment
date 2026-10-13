@@ -11,6 +11,7 @@ playwright-report/
 test-results/
 blob-report/
 playwright/.cache/
+playwright/.auth/
 
 # Logs
 npm-debug.log*

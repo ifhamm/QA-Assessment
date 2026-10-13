@@ -4,6 +4,8 @@ import { NavBar } from "../../pages/navbar.component";
 import { ConduitAPI } from "../../api/conduit-api";
 import { syntheticUser } from "../test-data";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test("article editor matches visual baseline", async ({ page, request }) => {
     const api = new ConduitAPI(request);
     const loginPage = new LoginPage(page);

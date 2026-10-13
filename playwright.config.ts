@@ -1,7 +1,10 @@
 import { defineConfig } from "@playwright/test";
 import dotenv from "dotenv";
+import path from "node:path";
 
 dotenv.config();
+
+const authFile = path.resolve("playwright/.auth/user.json");
 
 export default defineConfig({
   testDir: "./tests",
@@ -20,7 +23,22 @@ export default defineConfig({
   },
   projects: [
     {
+      name: "setup",
+      testMatch: /auth\.setup\.ts/,
+    },
+    {
+      name: "authenticated",
+      dependencies: ["setup"],
+      use: {
+        browserName: "chromium",
+        storageState: authFile,
+      },
+      testMatch: /dashboard\.spec\.ts/,
+    },
+    {
       name: "chromium",
+      dependencies: ["setup"],
+      testIgnore: /dashboard\.spec\.ts/,
       use: { browserName: "chromium" },
     },
   ],

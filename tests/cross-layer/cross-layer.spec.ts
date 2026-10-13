@@ -6,6 +6,8 @@ import { NavBar } from "../../pages/navbar.component";
 import { ConduitAPI } from "../../api/conduit-api";
 import { syntheticArticle, syntheticUser } from "../test-data";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe("Cross-Layer Tests", () => {
   // ─── Test 1: API create → UI verify ─────────────────────────────────
   test("article created via API is visible in the UI", async ({

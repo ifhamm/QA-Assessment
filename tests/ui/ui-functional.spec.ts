@@ -3,6 +3,8 @@ import { ArticlePage } from "../../pages/article.page";
 import { NavBar } from "../../pages/navbar.component";
 import { syntheticArticle, syntheticUser } from "../test-data";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test.describe("UI Functional Tests", () => {
   // ─── Test 1: Successful login → create article workflow ─────────────
   test("login and create a new article", async ({
@@ -64,12 +66,16 @@ test.describe("UI Functional Tests", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  // ─── Test 3: Unauthenticated access to editor ──────────────────────
-  test("redirects unauthenticated user away from editor", async ({ page }) => {
-    // Attempt unauthenticated access.
-    await page.goto("/editor");
+  test.describe("Unauthenticated access", () => {
+    test.use({ storageState: { cookies: [], origins: [] } });
 
-    // Assert redirect to login.
-    await expect(page).toHaveURL(/\/login$/);
+    // ─── Test 3: Unauthenticated access to editor ──────────────────────
+    test("redirects unauthenticated user away from editor", async ({ page }) => {
+      // Attempt unauthenticated access.
+      await page.goto("/editor");
+
+      // Assert redirect to login.
+      await expect(page).toHaveURL(/\/login$/);
+    });
   });
 });

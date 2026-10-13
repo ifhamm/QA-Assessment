@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test("login page matches visual baseline", async ({ page }) => {
     await page.goto("/login");
 
