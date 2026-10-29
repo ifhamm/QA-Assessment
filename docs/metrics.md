@@ -153,6 +153,34 @@ The workflow provides `BASE_URL` and `API_BASE_URL` only. The setup project does
 
 Tests excluded from CI: dashboard, visual, and k6. In the latest run, the UI functional and cross-layer tests also did not execute because the setup project failed.
 
+## WP0 post-audit CI unblock (2026-10-29)
+
+The owner approved a minimal unblock: synthetic `AUTH_EMAIL`/`AUTH_PASSWORD` in the Playwright job, `.env.example`, and the README environment note. No test behavior changed; `test:ui` still runs functional UI only and the dashboard remains out of CI.
+
+### Local clean-branch verification
+
+| Check | Command | Result |
+| --- | --- | --- |
+| Typecheck | `npm run typecheck` | Pass (exit 0) |
+| Full Playwright suite | `npx playwright test --reporter=list` | **9 passed**, 1.4 min reported / 88.0 s wall |
+| Test discovery | `npx playwright test --list` | 9 tests in 6 files (unchanged) |
+
+### Observed CI after the auth unblock
+
+The runs below include temporary cross-layer experiments that were later reverted. They are evidence of the public environment's behavior, not of the final branch's test code.
+
+| Run | Event | API job | Playwright job | Finding |
+| --- | --- | --- | --- | --- |
+| `40905357601` | push | pass | fail | Browser `GET /api/articles/...` 404 while `APIRequestContext` got 200 |
+| `40906290088` | push | pass | fail | API wait succeeded; browser still got 404 |
+| `40907097689` | push | pass | fail | Editor page saw persistent 404 for 20 s |
+| `40908085383` | push | pass | pass | One successful pass; not proof of stability |
+| `40908094021` | pull_request | pass | fail | Fresh cross-layer teardown login got 401 |
+| `40908858571` | push | fail | pass | Newman article lifecycle got 404 |
+| `40908872651` | pull_request | pass | fail | Dashboard's "New Article" link not visible within 5 s |
+
+The auth-env blocker is gone: every listed Playwright job reached the setup project successfully. The remaining failures are read-after-write/auth-state inconsistencies in the shared public app/API. They are recorded as environment failures and are not hidden with retries, sleeps, or timeout increases.
+
 ## Reporting quality
 
 | Metric | Baseline |

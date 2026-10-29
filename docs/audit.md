@@ -13,7 +13,7 @@
 - **Application under test:** `https://demo.realworld.show`
 - **API under test:** `https://api.realworld.show/api`
 
-**Scope discipline:** this WP adds documentation only. No test, page object, fixture, API helper, workflow, or project/config file was modified. The only non-doc addition is `docs/PRD.md`, which is the input document and was missing from the repository.
+**Scope discipline:** the baseline audit is documentation only. After the owner reviewed the findings, this branch also received a minimal CI unblock: synthetic `AUTH_EMAIL`/`AUTH_PASSWORD` in the Playwright job, the missing `.env.example`, and the matching README environment note. No test, page object, fixture, or API helper was modified, and `test:ui` still runs the original functional suite. See section 14.
 
 **How the measurements were taken:** fresh clone of `main`, `npm ci`, Chromium 1243 installed, synthetic `.env` with `BASE_URL`, `API_BASE_URL`, and synthetic `AUTH_EMAIL`/`AUTH_PASSWORD` values, all suites run locally on one worker. The public app and API were reachable throughout.
 
@@ -23,18 +23,19 @@
 
 The repository is real, much richer than a bare scaffold, and most of the README's coverage claims are accurate. API (15 requests / 53 assertions), UI (4 tests), cross-layer (2 tests), visual (2 tests), and k6 (1 scenario) all pass locally. The full Playwright suite (9 executions including setup) passed in about 1.3 minutes; the UI layer passed 41/41 under `--repeat-each=10`; the API suite ran 15 requests with 0 failures; k6 passed all thresholds.
 
-The most important finding is not a missing layer: **CI is red on `main`.** The latest run (`38359351107`, commit `c5ec4f2`) fails in the Playwright job because `tests/auth.setup.ts` requires `AUTH_EMAIL` and `AUTH_PASSWORD`, but the workflow only provides `BASE_URL` and `API_BASE_URL`. The API job passes; the cross-layer step is skipped. The README still advertises an older successful run.
+The most important baseline finding is not a missing layer: **CI was red on `main`.** The latest run (`38359351107`, commit `c5ec4f2`) failed in the Playwright job because `tests/auth.setup.ts` requires `AUTH_EMAIL` and `AUTH_PASSWORD`, but the workflow only provided `BASE_URL` and `API_BASE_URL`. The API job passed; the cross-layer step was skipped. The README still advertises an older successful run. The owner approved a minimal CI unblock; the auth-env blocker is fixed in this branch, but the public app/API is intermittently inconsistent, so CI is not yet reliably green (section 14).
 
 There are also real documentation and coverage gaps:
 
-1. CI is red on `main`; the README's "Latest successful CI run" is stale.
-2. The README tells the reader to `cp .env.example .env`, but `.env.example` does not exist.
+1. CI was red on `main`; the auth-env blocker is fixed in this branch, and the README's "Latest successful CI run" was stale.
+2. The README told the reader to `cp .env.example .env`, but `.env.example` did not exist; it is added in this branch.
 3. The README's project tree omits `fixtures/test-base.ts`, `tests/auth.setup.ts`, and `tests/ui/dashboard.spec.ts`.
 4. `tests/ui/dashboard.spec.ts` is not run in CI. CI only runs `ui-functional` and `cross-layer`.
 5. Visual and k6 suites are excluded from CI (consistent with the README's "optional" framing, but relevant to the PRD metrics).
 6. The repo already contains partial WP1/WP2 work (fixtures, auth setup, storage state, dashboard), so the PRD's starting assumptions are out of date.
 7. The cross-layer tests still bypass the fixtures and repeat registration/login/cleanup inline.
 8. Cleanup is noisy: every cross-layer update triggers an expected 404 warning for the old slug, and every UI test with the `user` fixture logs a 405 "user deletion not supported" warning.
+9. The public app/API is not strongly consistent. A browser `GET /api/articles/:slug` can return 404 immediately after a successful API create while `APIRequestContext` gets 200. This is an environment-dependent flake, not an assertion defect (section 14).
 
 ---
 
@@ -74,7 +75,7 @@ There are also real documentation and coverage gaps:
 └── tsconfig.json
 ```
 
-Missing from the repository but referenced by documentation or expected by the PRD: `.env.example` (README), and the PRD itself (`docs/PRD.md`, added by this WP).
+Missing from the repository at baseline but referenced by documentation or expected by the PRD: `.env.example` (README), and the PRD itself (`docs/PRD.md`, added by this WP). `.env.example` is added by the post-audit CI unblock (section 14).
 
 ---
 
@@ -98,6 +99,8 @@ Missing from the repository but referenced by documentation or expected by the P
 | 14 | "`npm test` also discovers the optional visual tests because the Playwright `testDir` is `./tests`." | True, and it also discovers `auth.setup.ts` and `dashboard.spec.ts`. | CI does not use `npm test`; it runs narrower scripts. |
 | 15 | "Node.js 22+". | CI uses Node 22; local audit used Node 24.13.0 successfully. | No mismatch observed. |
 | 16 | README does not document `AUTH_EMAIL`, `AUTH_PASSWORD`, `storageState`, `auth.setup.ts`, or the setup project. | All exist and are required for a normal full run. | Local setup and CI failure are hard to diagnose from the README. |
+
+**Status after the owner-approved unblock:** row 1 is resolved (`.env.example` added), row 5 is mitigated in CI (the workflow supplies synthetic values), and row 16 is partly addressed (the README now documents the auth variables and fallback). The stale CI link (row 2) and the incomplete project tree (row 3) remain for WP9.
 
 ---
 
@@ -273,18 +276,18 @@ No AI/agentic abstractions, no database verification, no self-healing, and no th
 
 ### P0 — blocks a healthy baseline
 
-1. **CI is red on `main`.** Latest run fails in the setup project because `AUTH_EMAIL`/`AUTH_PASSWORD` are missing; the UI and cross-layer tests never run. The README's CI link is stale.
-2. **README setup is broken.** `.env.example` is referenced but absent, so `cp .env.example .env` fails.
-3. **The auth setup contradicts itself.** It throws when credentials are absent, which prevents the fallback that was written for exactly that case. This is the root cause of the CI failure.
+1. **CI was red on `main` at baseline.** The setup project failed because `AUTH_EMAIL`/`AUTH_PASSWORD` were missing; the UI and cross-layer tests never ran. **Status:** the auth-env blocker is fixed in this branch; the remaining CI risk is the public app/API inconsistency (section 14).
+2. **README setup was broken.** `.env.example` was referenced but absent, so `cp .env.example .env` failed. **Status:** resolved; `.env.example` is added.
+3. **The auth setup contradicts itself.** It throws when credentials are absent, which prevents the fallback written for that case. **Status:** mitigated in CI by supplying synthetic credentials; the root fix (make the fallback usable when variables are absent) remains for WP2.
 
 ### P1 — coverage and duplication
 
-4. **Dashboard test is not in CI.** `test:ui` runs only `ui-functional.spec.ts`; `test:cross` runs only cross-layer. `dashboard.spec.ts` is invisible to CI.
+4. **Dashboard test is not in CI.** `test:ui` runs only `ui-functional.spec.ts`; `test:cross` runs only cross-layer. `dashboard.spec.ts` is invisible to CI. **Status:** intentionally deferred. Adding it exposed a public-app/auth-state flake and is a coverage change, not an audit fix; handle it in WP2 (auth state) or WP6 (pipeline).
 5. **UI logins are still repeated.** Full local run: 5 successful UI logins + 1 invalid submission; intended CI: 5 + 1, with setup twice. WP2's goal is not met.
 6. **Cross-layer bypasses the fixtures.** Both cross-layer tests construct `ConduitAPI` and page objects inline, register users, and perform cleanup inline. This is duplicated setup the PRD wants moved into fixtures.
 7. **Cleanup is noisy and partly hidden.** Cross-layer update always logs a 404 for the old slug; UI tests log 405 "user deletion not supported"; `deleteArticle` only warns. A failed cleanup is indistinguishable from expected noise.
 8. **Visual is not protected by CI.** Windows baselines exist; CI is Ubuntu and does not run visual. WP5 starts from the current local-only state.
-9. **`test:ui` naming is misleading.** It runs functional UI only, not `tests/ui` (dashboard included). There is no script for the full UI layer.
+9. **`test:ui` naming is misleading.** It runs functional UI only, not `tests/ui` (dashboard included). There is no script for the full UI layer. **Status:** intentionally unchanged in WP0; rename or add a full-UI script when dashboard is brought into CI.
 
 ### P2 — performance, reporting, maintainability
 
@@ -316,15 +319,17 @@ No AI/agentic abstractions, no database verification, no self-healing, and no th
 
 ---
 
-## 12. Open questions for the owner
+## 12. Owner decisions and remaining questions
 
-These are repeated in the PR description:
+The owner answered "all yes" to the five WP0 questions on 2026-10-29. Applied as follows:
 
-1. **Should WP0 fix the CI auth-env failure?** The smallest behavior-neutral fix would be to provide synthetic `AUTH_EMAIL`/`AUTH_PASSWORD` in CI (or let `auth.setup.ts` use its fallback when they are absent). Without it, this docs-only PR will also fail CI. Fixing it now is arguably outside audit-only scope.
-2. **Should `dashboard.spec.ts` be added to CI?** It is currently invisible to the pipeline.
-3. **Should `.env.example` be added?** The README already tells users to copy it.
-4. **Are WP1/WP2 considered already done?** The repo already contains fixtures, auth setup, storage state, and a dashboard. The PRD's sequence assumes they do not exist, so the next WP's scope needs confirmation.
-5. **Should visual baselines be regenerated on Linux and run in CI now, or left for WP5?** Current baselines are Windows-only.
+1. **Fix the CI auth-env failure.** Applied now as a minimal, behavior-neutral unblock: synthetic `AUTH_EMAIL`/`AUTH_PASSWORD` in the workflow, overridable with repository variables. No test code changed.
+2. **Add `dashboard.spec.ts` to CI.** Approved, but not applied in WP0. It is a coverage change; the attempt exposed an auth-state/public-app flake. It moves to WP2 (auth state) or WP6 (pipeline).
+3. **Add `.env.example`.** Applied.
+4. **Are WP1/WP2 partially done?** Confirmed. The repo already has fixtures, auth setup, storage state, and a dashboard. WP1/WP2 will be rescoped, and their plans must be approved before code.
+5. **Visual baselines in Linux/CI.** Approved direction, deferred to WP5 as the PRD specifies. Windows baselines remain for now.
+
+**Remaining question for the owner:** how should CI handle the public app/API's read-after-write inconsistency? Options: (a) point CI at a stable self-hosted RealWorld instance, (b) accept environmental failures and rerun manually, or (c) approve a dedicated reliability WP with an explicit, visible retry/polling policy. WP0 does not hide this with retries (section 14).
 
 ---
 
@@ -351,3 +356,39 @@ npm ci
 npm start          # separate terminal
 npm run test:perf
 ```
+
+---
+
+## 14. Post-audit WP0 unblock (owner-approved, 2026-10-29)
+
+### What changed
+
+- `.github/workflows/tests.yml`: the Playwright job now supplies synthetic `AUTH_EMAIL`/`AUTH_PASSWORD`, with repository-variable overrides. The existing setup fallback then runs as designed when those values do not authenticate.
+- `.env.example`: added with `BASE_URL`, `API_BASE_URL`, `AUTH_EMAIL`, and `AUTH_PASSWORD`.
+- `README.md`: the environment block now documents the auth variables and the setup fallback.
+- No test, page object, fixture, API helper, assertion, timeout, snapshot, or visual threshold changed. `test:ui` remains functional-only; the dashboard is still out of CI.
+
+### Why the unblock stops here
+
+Getting past setup exposed a deeper environmental problem. The public app/API is not strongly consistent:
+
+- An API create returns `201`, and an `APIRequestContext` `GET /api/articles/:slug` returns `200`, while the browser's `GET` for the same slug returns `404` at the same time. This was captured in the Playwright trace network log for run `40905357601`.
+- The browser can keep hitting a replica that does not have the article for more than 20 s. This caused the cross-layer create/update checks to fail intermittently even when the API read succeeded.
+- One PR run also failed the dashboard check because the authenticated navbar link was not visible within the existing 5 s assertion timeout. The setup itself passed.
+- The Newman API job failed in a separate run because the article returned `404` during the favorite/verify/delete steps after a successful create.
+
+These are environment failures, not assertion defects. Fixing them by adding sleeps, retries, longer timeouts, or test skips would violate the PRD's reliability rules. The attempted cross-layer polling/UI-fixture changes were therefore reverted; they belong in WP4 (reliability) if the owner wants them.
+
+### CI runs observed during the unblock (experiments included; test changes since reverted)
+
+| Run | Event | Result | Evidence |
+| --- | --- | --- | --- |
+| `40905357601` | push | API pass; Playwright failed in cross-layer | Browser `GET /api/articles/...` 404 while API request got 200 |
+| `40906290088` | push | API pass; Playwright failed in cross-layer | API wait succeeded, browser still saw 404 |
+| `40907097689` | push | API pass; Playwright failed in cross-layer | Editor page saw persistent 404 for 20 s |
+| `40908085383` | push | **both jobs pass** | One successful pass; not proof of stability |
+| `40908094021` | pull_request | API pass; Playwright failed in cross-layer teardown | Fresh cleanup login got 401 |
+| `40908858571` | push | Playwright pass; API failed | Newman article lifecycle got 404 |
+| `40908872651` | pull_request | API pass; Playwright failed in dashboard | "New Article" navbar link not visible within 5 s |
+
+The clean branch (docs + auth env + `.env.example` + README only) is tracked in PR #1. Because the public environment is intermittent, a green run is evidence of one successful pass, not proof that the suite is stable. The long-term fix is a stable test target or an approved reliability policy, not a retry loop hidden in CI.
