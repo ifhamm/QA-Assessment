@@ -53,9 +53,11 @@ The expected configuration is:
 ```env
 BASE_URL=https://demo.realworld.show
 API_BASE_URL=https://api.realworld.show/api
+AUTH_EMAIL=your-email@example.com
+AUTH_PASSWORD=your-password
 ```
 
-`.env` is intentionally ignored by Git. In GitHub Actions, the same non-secret URLs are configured as repository Actions variables named `BASE_URL` and `API_BASE_URL`.
+`.env` is intentionally ignored by Git. In GitHub Actions, the non-secret URLs are configured as repository Actions variables named `BASE_URL` and `API_BASE_URL`. The Playwright job supplies synthetic `AUTH_EMAIL` and `AUTH_PASSWORD` values; if those credentials do not authenticate, the setup project creates a session-local user and writes that storage state instead.
 
 ## Running the Tests
 
