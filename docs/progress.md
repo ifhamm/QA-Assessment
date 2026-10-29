@@ -5,7 +5,7 @@ Last updated: 2026-10-29
 ## Current state
 
 - **Current work package:** WP0 — Baseline & Audit
-- **Status:** deliverables complete; branch pushed; PR opened for review.
+- **Status:** deliverables complete; branch pushed; PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1) opened for review. CI is expected to fail on the pre-existing auth-env problem.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
 - **Audited baseline:** `main` at `c5ec4f22e4c037e1fc06243f9b2174f4cbeaea60`
 - **Next work package:** WP1 — **not started**. It requires explicit owner approval (and a plan posted for approval before code changes).
@@ -14,7 +14,7 @@ Last updated: 2026-10-29
 
 | WP | Status | Branch / PR | Notes |
 | --- | --- | --- | --- |
-| WP0 | Complete, awaiting review | `wp0/baseline-audit` | Docs only. No test behavior changed. |
+| WP0 | Complete, awaiting review | `wp0/baseline-audit` / [#1](https://github.com/ifhamm/QA-Assessment/pull/1) | Docs only. No test behavior changed. |
 | WP1 | Not started | — | Requires explicit approval; plan must be approved before code. |
 | WP2 | Not started | — | — |
 | WP3 | Not started | — | Requires explicit approval; plan required before code. |
