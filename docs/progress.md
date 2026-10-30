@@ -4,12 +4,12 @@ Last updated: 2026-10-31
 
 ## Current state
 
-- **Current work package:** WP2 — Reuse Auth State (owner-approved plan, 2026-10-31).
-- **Status:** implementation complete locally on `wp2/reuse-auth-state`; PR not opened yet.
+- **Current work package:** WP3 — Test Data Architecture (owner-approved plan, 2026-10-31).
+- **Status:** implementation in progress on `wp3/test-data-architecture`.
 - **CI policy:** environment-dependent failures are accepted and failed jobs are rerun manually (option b in `docs/audit.md` section 12). No retries, sleeps, or timeout increases.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
-- **Baseline:** WP1 merged to `main` as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
-- **Next work package:** WP3 — **not started**. Plan and approval required before code.
+- **Baseline:** WP2 merged to `main` as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
+- **Next work package:** WP4 — not started. Do not pull parallelism/retry work forward.
 
 ## Work package tracker
 
@@ -17,8 +17,8 @@ Last updated: 2026-10-31
 | --- | --- | --- | --- |
 | WP0 | Complete, merged | `wp0/baseline-audit` / [#1](https://github.com/ifhamm/QA-Assessment/pull/1) | Merged as `5364f30` on 2026-10-30. Audit docs + minimal CI auth unblock. No test behavior changed. |
 | WP1 | Complete, merged | `wp1/fixtures-abstraction-boundaries` / [#2](https://github.com/ifhamm/QA-Assessment/pull/2) | Merged as `e74a82d` on 2026-10-30. Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
-| WP2 | Complete locally, PR pending | `wp2/reuse-auth-state` | Auth fallback, API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
-| WP3 | Not started | — | Requires explicit approval; plan required before code. |
+| WP2 | Complete, merged | `wp2/reuse-auth-state` / [#3](https://github.com/ifhamm/QA-Assessment/pull/3) | Merged as `90e66ec` on 2026-10-31. API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
+| WP3 | In progress | `wp3/test-data-architecture` | Owner-approved plan. Worker-aware factories, fixture-owned cleanup, isolation evidence. |
 | WP4 | Not started | — | Parallelism, worker-scoped setup, and public-API read-after-write reliability. |
 | WP5 | Not started | — | Visual Linux baselines and CI. |
 | WP6 | Not started | — | Requires explicit approval; plan required before code. |
@@ -70,6 +70,7 @@ Last updated: 2026-10-31
 
 ## WP2 summary
 
+- Merged to `main` as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)) on 2026-10-31.
 - `auth.setup.ts` builds `storageState` from an API token; it no longer performs a UI login and no longer throws when `AUTH_EMAIL`/`AUTH_PASSWORD` are absent.
 - A new `authenticatedPage` fixture injects the per-test user's JWT into `localStorage`. Cross-layer and visual editor tests use it instead of UI logins.
 - The UI create test remains the explicit login-flow test; the invalid-login test is unchanged.
