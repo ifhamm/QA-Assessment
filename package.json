@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "playwright test",
-    "test:ui": "playwright test tests/ui/ui-functional.spec.ts",
+    "test:ui": "playwright test tests/ui",
+    "test:ui:functional": "playwright test tests/ui/ui-functional.spec.ts",
     "test:cross": "playwright test tests/cross-layer/cross-layer.spec.ts",
     "test:api": "newman run postman/conduit.postman_collection.json --env-var baseUrl=https://api.realworld.show",
     "test:visual": "playwright test tests/visual",

@@ -33,10 +33,10 @@ jobs:
     name: Playwright Tests
     runs-on: ubuntu-latest
     env:
-      # Synthetic values. If they do not authenticate, the setup project
-      # creates a session-local user and writes that storage state instead.
-      AUTH_EMAIL: ${{ vars.AUTH_EMAIL || 'ci-auth@example.com' }}
-      AUTH_PASSWORD: ${{ vars.AUTH_PASSWORD || 'CiAuthPassword123!' }}
+      # Optional. If these variables are unset or do not authenticate, the
+      # setup project creates a session-local user and writes that state.
+      AUTH_EMAIL: ${{ vars.AUTH_EMAIL }}
+      AUTH_PASSWORD: ${{ vars.AUTH_PASSWORD }}
 
     steps:
       - name: Checkout repository

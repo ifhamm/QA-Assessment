@@ -57,7 +57,9 @@ AUTH_EMAIL=your-email@example.com
 AUTH_PASSWORD=your-password
 ```
 
-`.env` is intentionally ignored by Git. In GitHub Actions, the non-secret URLs are configured as repository Actions variables named `BASE_URL` and `API_BASE_URL`. The Playwright job supplies synthetic `AUTH_EMAIL` and `AUTH_PASSWORD` values; if those credentials do not authenticate, the setup project creates a session-local user and writes that storage state instead.
+`AUTH_EMAIL` and `AUTH_PASSWORD` are optional. If they are absent or do not authenticate, the setup project creates a session-local user and writes that storage state instead.
+
+`.env` is intentionally ignored by Git. In GitHub Actions, the non-secret URLs are configured as repository Actions variables named `BASE_URL` and `API_BASE_URL`. `AUTH_EMAIL` and `AUTH_PASSWORD` are passed through from repository variables when configured; otherwise the setup project uses its session-local fallback.
 
 ## Running the Tests
 
@@ -71,10 +73,16 @@ npm run test:api
 
 This runs the exported Postman collection with Newman.
 
-### UI functional tests
+### UI tests
 
 ```bash
 npm run test:ui
+```
+
+This runs the functional UI tests and the authenticated dashboard test. To run only the functional file:
+
+```bash
+npm run test:ui:functional
 ```
 
 ### Cross-layer tests
