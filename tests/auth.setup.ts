@@ -3,10 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { ConduitAPI, type AuthUser } from "../api/conduit-api";
 import { buildStorageState } from "./auth-storage";
+import { syntheticUser } from "./test-data";
 
 const authFile = path.resolve("playwright/.auth/user.json");
 
-setup("authenticate via API", async ({ request, baseURL }) => {
+setup("authenticate via API", async ({ request, baseURL }, testInfo) => {
   if (!baseURL) {
     throw new Error("BASE_URL must be set for the authentication setup.");
   }
@@ -33,20 +34,19 @@ setup("authenticate via API", async ({ request, baseURL }) => {
   }
 
   if (!user) {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const fallbackEmail = `auth_${id}@example.com`;
-    const fallbackPassword = `Password_${id}!`;
-    const fallbackUsername = `auth_${id}`;
+    const data = syntheticUser(testInfo.workerIndex);
 
     console.warn(
       email && password
         ? "Configured auth credentials are unavailable; creating a session-local setup user."
         : "AUTH_EMAIL/AUTH_PASSWORD are not set; creating a session-local setup user."
     );
-    await api.registerUser(fallbackUsername, fallbackEmail, fallbackPassword);
-    user = await api.login(fallbackEmail, fallbackPassword);
+    await api.registerUser(data.username, data.email, data.password);
+    user = await api.login(data.email, data.password);
   }
 
+  // The setup user is shared infrastructure for the dashboard, not per-test
+  // data. The API has no user-deletion endpoint, so it cannot be cleaned up.
   // The app only needs the JWT in localStorage. Writing the state directly
   // avoids a UI login that was never part of what the setup project verifies.
   await fs.mkdir(path.dirname(authFile), { recursive: true });

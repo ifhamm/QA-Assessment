@@ -1,4 +1,5 @@
 import { test, expect } from "../../fixtures/test-base";
+import { bestEffortCleanup } from "../cleanup";
 import { syntheticArticle, syntheticUser } from "../test-data";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -22,7 +23,10 @@ test.describe("UI Functional Tests", () => {
     await navBar.expectLoggedIn(user.username);
 
     // Create article via UI.
-    const articleData = syntheticArticle("UICreate");
+    const articleData = syntheticArticle(
+      "UICreate",
+      test.info().workerIndex
+    );
     await editorPage.goto();
     await editorPage.fillArticle(articleData);
     
@@ -44,16 +48,22 @@ test.describe("UI Functional Tests", () => {
       // Teardown: delete article.
       // This article is created through the UI, so the test owns its cleanup.
       // The UI login above replaced the user's API token, so log in again.
-      if (createdSlug) {
-        const cleanupUser = await api.login(user.email, user.password);
-        await api.deleteArticle(cleanupUser.token, createdSlug);
+      // If the redirect assertion failed, recover the slug from the URL so a
+      // successfully published article is still deleted.
+      const slugFromUrl = page.url().match(/\/article\/([^/?#]+)/)?.[1];
+      const slug = createdSlug || slugFromUrl;
+      if (slug) {
+        await bestEffortCleanup(`UI-created article ${slug}`, async () => {
+          const cleanupUser = await api.login(user.email, user.password);
+          await api.deleteArticle(cleanupUser.token, slug);
+        });
       }
     }
   });
 
   // ─── Test 2: Invalid login ─────────────────────────────────────────
   test("shows error on invalid credentials", async ({ page, loginPage }) => {
-    const testUser = syntheticUser();
+    const testUser = syntheticUser(test.info().workerIndex);
 
     await loginPage.goto();
     await loginPage.login(testUser.email, testUser.password);

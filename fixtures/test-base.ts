@@ -10,7 +10,8 @@ import { EditorPage } from "../pages/editor.page";
 import { LoginPage } from "../pages/login.page";
 import { NavBar } from "../pages/navbar.component";
 import { JWT_STORAGE_KEY } from "../tests/auth-storage";
-import { syntheticArticle } from "../tests/test-data";
+import { bestEffortCleanup } from "../tests/cleanup";
+import { syntheticArticle, syntheticUser } from "../tests/test-data";
 
 export type TestUser = AuthUser & {
   password: string;
@@ -55,18 +56,22 @@ export const test = base.extend<Fixtures>({
   navBar: async ({ page }, use) => {
     await use(new NavBar(page));
   },
-  user: async ({ api }, use) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    const password = `Password_${id}!`;
+  user: async ({ api }, use, testInfo) => {
+    const data = syntheticUser(testInfo.workerIndex);
     const user = await api.registerUser(
-      `testuser_${id}`,
-      `testuser_${id}@example.com`,
-      password
+      data.username,
+      data.email,
+      data.password
     );
-    const userData = { ...user, password };
+    const userData = { ...user, password: data.password };
 
     await use(userData);
-    await api.deleteUser(userData.token);
+    // The RealWorld API used here has no user-deletion endpoint, so this
+    // attempt is expected to return 405. It stays best effort so a cleanup
+    // problem cannot replace the test result.
+    await bestEffortCleanup(`user ${data.username}`, () =>
+      api.deleteUser(userData.token)
+    );
   },
   /**
    * The configured page with the test user's JWT already in localStorage.
@@ -95,8 +100,8 @@ export const test = base.extend<Fixtures>({
    * Playwright runs this teardown even when the test fails, which is why the
    * cleanup no longer needs a `try/finally` block in the test body.
    */
-  article: async ({ api, user }, use) => {
-    const data = syntheticArticle("Fixture");
+  article: async ({ api, user }, use, testInfo) => {
+    const data = syntheticArticle("Fixture", testInfo.workerIndex);
     const created = await api.createArticle(user.token, data);
     const article: TestArticle = { data, created, slug: created.slug };
 
@@ -104,9 +109,12 @@ export const test = base.extend<Fixtures>({
 
     // The public API replaces the user's token on every login. If the test
     // logged in through the UI, `user.token` is stale here, so log in again
-    // to get a token that can delete the article.
-    const cleanupUser = await api.login(user.email, user.password);
-    await api.deleteArticle(cleanupUser.token, article.slug);
+    // to get a token that can delete the article. The whole teardown is best
+    // effort: a login or delete failure must not hide the test result.
+    await bestEffortCleanup(`article ${article.slug}`, async () => {
+      const cleanupUser = await api.login(user.email, user.password);
+      await api.deleteArticle(cleanupUser.token, article.slug);
+    });
   },
 });
 
