@@ -5,20 +5,16 @@ test.use({ storageState: { cookies: [], origins: [] } });
 test.describe("Cross-Layer Tests", () => {
   // ─── Test 1: API create → UI verify ─────────────────────────────────
   test("article created via API is visible in the UI", async ({
-    page,
+    authenticatedPage: page,
     user,
-    loginPage,
     articlePage,
     navBar,
     article,
   }) => {
-    // The user and the article are prepared by fixtures before this line.
-    // Signing in through the UI is still part of the scenario.
-    await loginPage.goto();
-    await loginPage.login(user.email, user.password);
-    await navBar.expectLoggedIn(user.username);
-
+    // The user and the article are prepared by fixtures. The browser session
+    // is authenticated by injecting the test user's token, not by a UI login.
     await page.goto(`/article/${article.created.slug}`);
+    await navBar.expectLoggedIn(user.username);
 
     // Assert UI content.
     await articlePage.expectTitle(article.created.title);
@@ -29,21 +25,16 @@ test.describe("Cross-Layer Tests", () => {
 
   // ─── Test 2: UI update → API verify ─────────────────────────────────
   test("article updated via UI is reflected in the API", async ({
-    page,
+    authenticatedPage: page,
     api,
     user,
-    loginPage,
     editorPage,
     articlePage,
     navBar,
     article,
   }) => {
-    await loginPage.goto();
-    await loginPage.login(user.email, user.password);
-    await navBar.expectLoggedIn(user.username);
-
-    // Navigate to article editor.
     await editorPage.goto(article.created.slug);
+    await navBar.expectLoggedIn(user.username);
 
     // Assert initial form data.
     await expect(editorPage.titleInput).toHaveValue(article.data.title, {
@@ -68,10 +59,8 @@ test.describe("Cross-Layer Tests", () => {
     const pathParts = new URL(page.url()).pathname.split("/article/");
     article.slug = pathParts[pathParts.length - 1];
 
-    // Assert API content.
-    // The token from registration is stale after the UI login, so get a fresh one.
-    const freshUser = await api.login(user.email, user.password);
-    const apiArticle = await api.getArticle(article.slug, freshUser.token);
+    // No UI login rotated the token, so the registration token is still valid.
+    const apiArticle = await api.getArticle(article.slug, user.token);
     expect(apiArticle.title).toBe(updatedTitle);
     expect(apiArticle.body).toBe(updatedBody);
   });

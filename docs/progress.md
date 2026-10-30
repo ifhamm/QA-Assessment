@@ -4,22 +4,22 @@ Last updated: 2026-10-31
 
 ## Current state
 
-- **Current work package:** WP1 — Fixtures & Abstraction Boundaries (owner-approved plan).
-- **Status:** implementation complete locally on `wp1/fixtures-abstraction-boundaries`; PR not opened yet.
-- **CI policy:** for WP1, environment-dependent failures are accepted and failed jobs are rerun manually (option b in `docs/audit.md` section 12). No retries, sleeps, or timeout increases.
+- **Current work package:** WP2 — Reuse Auth State (owner-approved plan, 2026-10-31).
+- **Status:** implementation complete locally on `wp2/reuse-auth-state`; PR not opened yet.
+- **CI policy:** environment-dependent failures are accepted and failed jobs are rerun manually (option b in `docs/audit.md` section 12). No retries, sleeps, or timeout increases.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
-- **Baseline:** WP0 merged to `main` as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
-- **Next work package:** WP2 — **not started**. Rescope required; plan and approval before code.
+- **Baseline:** WP1 merged to `main` as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
+- **Next work package:** WP3 — **not started**. Plan and approval required before code.
 
 ## Work package tracker
 
 | WP | Status | Branch / PR | Notes |
 | --- | --- | --- | --- |
 | WP0 | Complete, merged | `wp0/baseline-audit` / [#1](https://github.com/ifhamm/QA-Assessment/pull/1) | Merged as `5364f30` on 2026-10-30. Audit docs + minimal CI auth unblock. No test behavior changed. |
-| WP1 | Complete locally, PR pending | `wp1/fixtures-abstraction-boundaries` | Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
-| WP2 | Not started | — | Rescope: auth fallback, login reuse, dashboard auth state, cleanup visibility. |
+| WP1 | Complete, merged | `wp1/fixtures-abstraction-boundaries` / [#2](https://github.com/ifhamm/QA-Assessment/pull/2) | Merged as `e74a82d` on 2026-10-30. Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
+| WP2 | Complete locally, PR pending | `wp2/reuse-auth-state` | Auth fallback, API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
 | WP3 | Not started | — | Requires explicit approval; plan required before code. |
-| WP4 | Not started | — | Rescope: cross-layer fixture migration and public-API read-after-write reliability. |
+| WP4 | Not started | — | Parallelism, worker-scoped setup, and public-API read-after-write reliability. |
 | WP5 | Not started | — | Visual Linux baselines and CI. |
 | WP6 | Not started | — | Requires explicit approval; plan required before code. |
 | WP7 | Not started | — | — |
@@ -40,6 +40,15 @@ Last updated: 2026-10-31
 - [`docs/decisions/WP1-fixtures-abstraction-boundaries.md`](decisions/WP1-fixtures-abstraction-boundaries.md) — fixture boundaries, `beforeEach` vs test vs worker fixtures, token rotation finding.
 - [`docs/pr/WP1-fixtures-abstraction-boundaries.md`](pr/WP1-fixtures-abstraction-boundaries.md) — PR description, assertion parity, evidence.
 - [`docs/metrics.md`](metrics.md) — WP1 after-metrics section.
+- PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2), merge commit `e74a82d`.
+- Merged `main` push run [41102844151](https://github.com/ifhamm/QA-Assessment/actions/runs/41102844151) — **SUCCESS**, both jobs.
+- PR run [41102377226](https://github.com/ifhamm/QA-Assessment/actions/runs/41102377226) — **SUCCESS**, both jobs.
+
+### WP2
+
+- [`docs/decisions/WP2-reuse-auth-state.md`](decisions/WP2-reuse-auth-state.md) — auth modes, API-built storage state, per-test token injection, trade-offs.
+- [`docs/pr/WP2-reuse-auth-state.md`](pr/WP2-reuse-auth-state.md) — PR description, assertion parity, evidence.
+- [`docs/metrics.md`](metrics.md) — WP2 before/after section.
 
 ## Baseline summary
 
@@ -48,7 +57,7 @@ Last updated: 2026-10-31
 - CI at baseline: **red on `main`** (run `38359351107`). Setup failed because `AUTH_EMAIL`/`AUTH_PASSWORD` were not configured; cross-layer was skipped.
 - CI after the auth unblock: setup now starts, but the public app/API intermittently returns 404/401 across replicas. One push run passed both jobs; other runs failed in API, cross-layer, or dashboard. See `docs/audit.md` section 14.
 - README: mostly accurate, but its "latest successful CI run" is stale, the project tree is incomplete, and the auth setup/dashboard were undocumented.
-- The repo already contains partial WP1/WP2 work (fixtures, auth setup, storage state, dashboard). The next WP needs rescoping.
+- WP2 is rescoped and approved: auth fallback, API-built storage state, per-test token injection, dashboard in CI, and `test:ui` naming.
 
 ## WP1 summary
 
@@ -57,12 +66,23 @@ Last updated: 2026-10-31
 - The `article` fixture owns API setup/teardown; the UI create test keeps its cleanup because the article is created through the UI.
 - The public API replaces the user's token on every login, so cleanup logs in again before deleting. No retries or sleeps.
 - Local: typecheck passes; 9/9 full suite (1.0 min); cross-layer 29.4 s; UI functional 29.1 s; no `404` cleanup warning.
-- CI: PR not opened yet. Environment-dependent failures are expected and will be rerun manually.
+- CI: merged `main` push run `41102844151` is green; PR run `41102377226` is green. The earlier branch push run `41100533592` failed the API job for the known public-environment reason; it was not hidden with retries.
+
+## WP2 summary
+
+- `auth.setup.ts` builds `storageState` from an API token; it no longer performs a UI login and no longer throws when `AUTH_EMAIL`/`AUTH_PASSWORD` are absent.
+- A new `authenticatedPage` fixture injects the per-test user's JWT into `localStorage`. Cross-layer and visual editor tests use it instead of UI logins.
+- The UI create test remains the explicit login-flow test; the invalid-login test is unchanged.
+- Dashboard is now part of `test:ui` and therefore CI. `test:ui:functional` preserves the old focused command.
+- Local: typecheck passes; 9/9 full suite (47.2 s); `test:ui` 5/5 (27.0 s); `test:ui:functional` 4/4 (21.1 s); cross-layer 3/3 (20.6 s); visual 3/3 (15.7 s); repeat probe 41/41 (3.8 min).
+- Successful UI logins per full run: 5 → 1; invalid submissions remain 1.
+- The expected `405` user-deletion warnings remain; cleanup semantics are WP3. The full suite had no `404` cleanup warning; the repeat probe produced one public-environment `404` that did not fail the test.
+- CI evidence is pending the PR run.
 
 ## Blockers / decisions needed
 
-1. **WP1 PR.** Open it, review the diff, and compare the CI run. CI may be red because of the shared public environment; rerun the failed job manually.
-2. **WP2 scope.** Confirm: root auth fallback, login reuse via `storageState`, dashboard auth state, and cleanup visibility.
-3. **WP5 scope.** Confirm: Linux visual baselines and CI integration.
-4. **Do not start WP2 until the owner explicitly approves it.**
-5. **CI policy (resolved for WP1).** Accept environment-dependent failures and rerun failed jobs manually. Revisit a stable test target if the failure frequency rises.
+1. **WP2 PR.** Implementation is complete locally. Open the PR using `docs/pr/WP2-reuse-auth-state.md` and wait for both checks before merging.
+2. **WP3 scope.** Confirm cleanup semantics, the expected `405` user-deletion warning, and unused `ArticlePage` locators.
+3. **WP5 scope.** Confirm Linux visual baselines and CI integration.
+4. **Do not start WP3 until the owner explicitly approves it.**
+5. **CI policy (resolved for WP1/WP2).** Accept environment-dependent failures and rerun failed jobs manually. Revisit a stable test target if the failure frequency rises.

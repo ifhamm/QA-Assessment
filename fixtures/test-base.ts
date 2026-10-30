@@ -1,4 +1,4 @@
-import { test as base, expect } from "@playwright/test";
+import { test as base, expect, type Page } from "@playwright/test";
 import {
   ConduitAPI,
   type Article,
@@ -9,6 +9,7 @@ import { ArticlePage } from "../pages/article.page";
 import { EditorPage } from "../pages/editor.page";
 import { LoginPage } from "../pages/login.page";
 import { NavBar } from "../pages/navbar.component";
+import { JWT_STORAGE_KEY } from "../tests/auth-storage";
 import { syntheticArticle } from "../tests/test-data";
 
 export type TestUser = AuthUser & {
@@ -34,6 +35,7 @@ type Fixtures = {
   articlePage: ArticlePage;
   navBar: NavBar;
   user: TestUser;
+  authenticatedPage: Page;
   article: TestArticle;
 };
 
@@ -65,6 +67,28 @@ export const test = base.extend<Fixtures>({
 
     await use(userData);
     await api.deleteUser(userData.token);
+  },
+  /**
+   * The configured page with the test user's JWT already in localStorage.
+   *
+   * The app reads the token before its own scripts run, so tests that are not
+   * about the login flow do not need to submit the login form. This is
+   * per-test because each test owns its own user; the shared setup user would
+   * be the wrong identity for data-owning tests.
+   */
+  authenticatedPage: async ({ page, user }, use) => {
+    await page.addInitScript(
+      ({ key, token }) => {
+        try {
+          window.localStorage.setItem(key, token);
+        } catch {
+          // about:blank and other non-origin pages have no usable localStorage.
+        }
+      },
+      { key: JWT_STORAGE_KEY, token: user.token }
+    );
+
+    await use(page);
   },
   /**
    * Creates the article before the test and deletes it afterwards.

@@ -25,7 +25,7 @@ Measurements are local unless stated otherwise. This is the WP0 baseline for `ma
 | --- | --- | ---: | --- |
 | API | Postman + Newman | 15 requests, 53 assertions | Yes |
 | UI functional | Playwright | 3 execution tests | Yes |
-| UI dashboard | Playwright | 1 execution test | **No** |
+| UI dashboard | Playwright | 1 execution test | Yes (from WP2) |
 | Cross-layer | Playwright | 2 execution tests | Yes |
 | Visual | Playwright | 2 execution tests | **No** |
 | Setup project | Playwright | 1 setup test | Yes (dependency) |
@@ -144,7 +144,7 @@ The workflow provides `BASE_URL` and `API_BASE_URL` only. The setup project does
 | Typecheck | Yes |
 | UI functional (3) | Yes |
 | Cross-layer (2) | Yes |
-| Dashboard (1) | **No** |
+| Dashboard (1) | Yes (from WP2; `test:ui` runs `tests/ui`) |
 | Visual (2) | **No** |
 | k6 (1 scenario) | **No** |
 | Merged report | No; HTML artifact only |
@@ -208,6 +208,54 @@ Branch `wp1/fixtures-abstraction-boundaries`, base `main` at `5364f30`. All fixt
 - The probe uses `tests/ui` (dashboard + 3 functional tests) to match the WP0 baseline.
 - No assertion, timeout, retry, snapshot, or threshold changed.
 
+## WP2 — Reuse Auth State (2026-10-31)
+
+Branch `wp2/reuse-auth-state`, base `main` at `e74a82d`. Local runs: Windows 11, Node 24.13.0, Playwright 1.63.0, 1 worker, retries 0.
+
+### Before / after
+
+| Metric | Before (WP1) | After WP2 |
+| --- | ---: | ---: |
+| Playwright test executions | 9 | 9 |
+| Full suite (Playwright time) | 1.0 min | 47.2 s |
+| UI functional (`test:ui:functional`) | 29.1 s | 21.1 s |
+| UI all (`test:ui`) | n/a (functional only) | 27.0 s (functional + dashboard) |
+| Cross-layer | 29.4 s | 20.6 s |
+| Visual | not recorded in WP1 (WP0: 33.9 s) | 15.7 s |
+| UI `--repeat-each=10` | 41/41, 3.9 min | 41/41, 3.8 min |
+| Successful UI logins per full run | 5 + 1 invalid | 1 + 1 invalid |
+| Setup UI logins | 1 | 0 |
+| Successful API login calls per full run | 6 | 4 (5 attempts; one configured credential is rejected) |
+| Expected `405` user-deletion warnings | 1 per fixture test | 4 per full run |
+| Dashboard in CI | No | Yes |
+| `test:ui` scope | `ui-functional.spec.ts` only | `tests/ui` (functional + dashboard) |
+
+### Notes
+
+- UI login locations after WP2: `ui-functional.spec.ts:19` (explicit login-and-create test) and `ui-functional.spec.ts:59` (invalid credentials). Setup, cross-layer, and visual editor no longer submit the login form.
+- The API login count is a code-path count. With `AUTH_*` present but invalid, setup makes one rejected login attempt plus one successful fallback login. With `AUTH_*` absent it makes one successful fallback login. Cross-layer and UI create still log in once for cleanup because login rotates the token.
+- The `405` warnings are expected: cross-layer ×2, UI create ×1, visual editor ×1. WP3 owns cleanup semantics.
+- The full suite had no `404` cleanup warning. The 41-run repeat probe produced one expected `404` on UI article cleanup (public API read-after-delete inconsistency); the test still passed.
+- The visual snapshot was not changed; no `--update-snapshots` was used.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | exit 0 |
+| `npx playwright test --list` | 9 tests in 6 files |
+| `npx playwright test --reporter=list` | 9 passed (47.2 s) |
+| `npm run test:ui` | 5 passed (27.0 s; setup + dashboard + 3 functional) |
+| `npm run test:ui:functional` | 4 passed (21.1 s) |
+| `npm run test:cross` | 3 passed (20.6 s) |
+| `npm run test:visual` | 3 passed (15.7 s) |
+| `npx playwright test tests/ui --repeat-each=10` | 41 passed (3.8 min) |
+| `npm run test:api` | 15 requests / 53 assertions, 0 failed (6.5 s) |
+| Absent `AUTH_EMAIL`/`AUTH_PASSWORD` setup run | 1 passed; session-local user created |
+| `git check-ignore playwright/.auth/user.json` | ignored |
+
+CI evidence will be added after the PR run. The public environment remains intermittent; failures are recorded and rerun manually, not hidden.
+
 ## Reporting quality
 
 | Metric | Baseline |
@@ -231,7 +279,7 @@ Branch `wp1/fixtures-abstraction-boundaries`, base `main` at `5364f30`. All fixt
 | Test discovery | `npx playwright test --list` | 9 tests in 6 files |
 | Default test script | `npm test` | Present (`playwright test`) |
 | API script | `npm run test:api` | Present |
-| UI script | `npm run test:ui` | Present, but only `ui-functional.spec.ts` |
+| UI script | `npm run test:ui` | Present; runs `tests/ui` (functional + dashboard). `test:ui:functional` runs functional only. |
 | Cross-layer script | `npm run test:cross` | Present |
 | Visual script | `npm run test:visual` | Present |
 | Performance script | `cd performance && npm run test:perf` | Present |

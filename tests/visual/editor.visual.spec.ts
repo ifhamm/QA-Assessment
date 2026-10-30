@@ -1,51 +1,31 @@
-import { test, expect } from "@playwright/test";
-import { LoginPage } from "../../pages/login.page";
-import { NavBar } from "../../pages/navbar.component";
-import { ConduitAPI } from "../../api/conduit-api";
-import { syntheticUser } from "../test-data";
+import { test, expect } from "../../fixtures/test-base";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test("article editor matches visual baseline", async ({ page, request }) => {
-    const api = new ConduitAPI(request);
-    const loginPage = new LoginPage(page);
-    const navBar = new NavBar(page);
+test("article editor matches visual baseline", async ({
+  authenticatedPage: page,
+  user,
+  editorPage,
+  navBar,
+}) => {
+  await editorPage.goto();
+  await navBar.expectLoggedIn(user.username);
 
-    const user = syntheticUser();
+  await expect(editorPage.titleInput).toBeVisible();
+  await expect(editorPage.descriptionInput).toBeVisible();
 
-    await api.registerUser(
-        user.username,
-        user.email,
-        user.password
-    );
+  const usernameLink = page.getByRole("link", {
+    name: user.username,
+  });
 
-    await loginPage.goto();
-    await loginPage.login(user.email, user.password);
+  await usernameLink.evaluate((el) => {
+    const element = el as HTMLElement;
+    element.style.width = "120px";
+    element.style.visibility = "hidden";
+  });
 
-    await navBar.expectLoggedIn(user.username);
-
-    await page.goto("/editor");
-
-    await expect(
-        page.getByPlaceholder("Article Title")
-    ).toBeVisible();
-
-    await expect(
-        page.getByPlaceholder("What's this article about?")
-    ).toBeVisible();
-
-    const usernameLink = page.getByRole("link", {
-        name: user.username,
-    });
-
-    await usernameLink.evaluate((el) => {
-        const element = el as HTMLElement;
-        element.style.width = "120px";
-        element.style.visibility = "hidden";
-    });
-
-    await expect(page).toHaveScreenshot("article-editor.png", {
-        fullPage: true,
-        mask: [usernameLink],
-    });
+  await expect(page).toHaveScreenshot("article-editor.png", {
+    fullPage: true,
+    mask: [usernameLink],
+  });
 });
