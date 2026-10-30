@@ -181,6 +181,33 @@ The runs below include temporary cross-layer experiments that were later reverte
 
 The auth-env blocker is gone: every listed Playwright job reached the setup project successfully. The remaining failures are read-after-write/auth-state inconsistencies in the shared public app/API. They are recorded as environment failures and are not hidden with retries, sleeps, or timeout increases.
 
+## WP1 — Fixtures & Abstraction Boundaries (2026-10-31)
+
+Branch `wp1/fixtures-abstraction-boundaries`, base `main` at `5364f30`. All fixtures are test-scoped; no worker-scoped state was introduced.
+
+### Before / after
+
+| Metric | Before (WP0) | After WP1 |
+| --- | ---: | ---: |
+| Playwright test executions | 9 | 9 |
+| Full suite (Playwright time) | 1.2 min | 1.0 min |
+| Cross-layer, incl. setup | 40.4 s | 29.4 s |
+| UI functional, incl. setup | 29.6 s | 29.1 s |
+| UI layer `--repeat-each=10` | 41/41, 5.0 min | 41/41, 3.9 min |
+| API login calls per full run | 8 | 6 |
+| Successful UI logins per full run | 5 + 1 invalid | 5 + 1 invalid |
+| Expected `404` cleanup warnings | 1 per run | 0 |
+| `405` user-deletion warnings | 1 per fixture test | 1 per fixture test |
+| Literal `expect(` calls in migrated specs | 7 | 7 |
+
+### Notes
+
+- Cross-layer duration dropped because the tests no longer register and log in twice. The fixture reuses the registration token for article creation and logs in once for cleanup.
+- **Token rotation:** the public API invalidates the previous token on every login. Cleanup therefore logs in again after the test's UI login. This is a correctness requirement, not a retry or a workaround.
+- UI logins are unchanged. Removing them is WP2.
+- The probe uses `tests/ui` (dashboard + 3 functional tests) to match the WP0 baseline.
+- No assertion, timeout, retry, snapshot, or threshold changed.
+
 ## Reporting quality
 
 | Metric | Baseline |

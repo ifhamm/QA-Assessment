@@ -1,6 +1,4 @@
 import { test, expect } from "../../fixtures/test-base";
-import { ArticlePage } from "../../pages/article.page";
-import { NavBar } from "../../pages/navbar.component";
 import { syntheticArticle, syntheticUser } from "../test-data";
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -12,11 +10,10 @@ test.describe("UI Functional Tests", () => {
     api,
     loginPage,
     editorPage,
+    articlePage,
+    navBar,
     user,
   }) => {
-    const articlePage = new ArticlePage(page);
-    const navBar = new NavBar(page);
-
     // Authenticate via UI.
     await loginPage.goto();
     await loginPage.login(user.email, user.password);
@@ -45,6 +42,8 @@ test.describe("UI Functional Tests", () => {
       await articlePage.expectBodyContains(articleData.body.replace(/\*\*/g, ""));
     } finally {
       // Teardown: delete article.
+      // This article is created through the UI, so the test owns its cleanup.
+      // The UI login above replaced the user's API token, so log in again.
       if (createdSlug) {
         const cleanupUser = await api.login(user.email, user.password);
         await api.deleteArticle(cleanupUser.token, createdSlug);

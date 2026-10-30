@@ -1,10 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { LoginPage } from "../../pages/login.page";
-import { EditorPage } from "../../pages/editor.page";
-import { ArticlePage } from "../../pages/article.page";
-import { NavBar } from "../../pages/navbar.component";
-import { ConduitAPI } from "../../api/conduit-api";
-import { syntheticArticle, syntheticUser } from "../test-data";
+import { test, expect } from "../../fixtures/test-base";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -12,106 +6,73 @@ test.describe("Cross-Layer Tests", () => {
   // ─── Test 1: API create → UI verify ─────────────────────────────────
   test("article created via API is visible in the UI", async ({
     page,
-    request,
+    user,
+    loginPage,
+    articlePage,
+    navBar,
+    article,
   }) => {
-    const api = new ConduitAPI(request);
-    const articlePage = new ArticlePage(page);
-    const loginPage = new LoginPage(page);
-    const navBar = new NavBar(page);
+    // The user and the article are prepared by fixtures before this line.
+    // Signing in through the UI is still part of the scenario.
+    await loginPage.goto();
+    await loginPage.login(user.email, user.password);
+    await navBar.expectLoggedIn(user.username);
 
-    // Register test user.
-    const testUser = syntheticUser();
-    await api.registerUser(testUser.username, testUser.email, testUser.password);
+    await page.goto(`/article/${article.created.slug}`);
 
-    // Create article via API.
-    const user = await api.login(testUser.email, testUser.password);
-    const data = syntheticArticle("APICreate");
-    const created = await api.createArticle(user.token, data);
-
-    try {
-      // Authenticate via UI.
-      await loginPage.goto();
-      await loginPage.login(testUser.email, testUser.password);
-      await navBar.expectLoggedIn(testUser.username);
-      
-      // Navigate to article.
-      await page.goto(`/article/${created.slug}`);
-
-      // Assert UI content.
-      await articlePage.expectTitle(created.title);
-      await articlePage.expectBodyContains(data.body.replace(/\*\*/g, ""));
-    } finally {
-      // Teardown: delete article.
-      const cleanupUser = await api.login(testUser.email, testUser.password);
-      await api.deleteArticle(cleanupUser.token, created.slug);
-    }
+    // Assert UI content.
+    await articlePage.expectTitle(article.created.title);
+    await articlePage.expectBodyContains(
+      article.data.body.replace(/\*\*/g, "")
+    );
   });
 
   // ─── Test 2: UI update → API verify ─────────────────────────────────
   test("article updated via UI is reflected in the API", async ({
     page,
-    request,
+    api,
+    user,
+    loginPage,
+    editorPage,
+    articlePage,
+    navBar,
+    article,
   }) => {
-    const api = new ConduitAPI(request);
-    const loginPage = new LoginPage(page);
-    const editorPage = new EditorPage(page);
-    const articlePage = new ArticlePage(page);
-    const navBar = new NavBar(page);
+    await loginPage.goto();
+    await loginPage.login(user.email, user.password);
+    await navBar.expectLoggedIn(user.username);
 
-    // Register test user.
-    const testUser = syntheticUser();
-    await api.registerUser(testUser.username, testUser.email, testUser.password);
+    // Navigate to article editor.
+    await editorPage.goto(article.created.slug);
 
-    // Authenticate and create article via API.
-    const user = await api.login(testUser.email, testUser.password);
-    const original = syntheticArticle("UIUpdate");
-    const created = await api.createArticle(user.token, original);
+    // Assert initial form data.
+    await expect(editorPage.titleInput).toHaveValue(article.data.title, {
+      timeout: 10000,
+    });
 
-    let finalSlug = created.slug;
-    try {
-      // Authenticate via UI.
-      await loginPage.goto();
-      await loginPage.login(testUser.email, testUser.password);
-      await navBar.expectLoggedIn(testUser.username);
+    // Update article via UI.
+    const updatedTitle = `Updated ${article.data.title}`;
+    const updatedBody = `Updated body content ${Date.now()}`;
+    await editorPage.updateTitle(updatedTitle);
+    await editorPage.updateBody(updatedBody);
+    await editorPage.publish();
 
-      // Navigate to article editor.
-      await editorPage.goto(created.slug);
+    // Assert redirection.
+    await expect(page).toHaveURL(/\/article\//, { timeout: 10000 });
 
-      // Assert initial form data.
-      await expect(editorPage.titleInput).toHaveValue(original.title, {
-        timeout: 10000,
-      });
+    // Assert UI content.
+    await articlePage.expectTitle(updatedTitle);
 
-      // Update article via UI.
-      const updatedTitle = `Updated ${original.title}`;
-      const updatedBody = `Updated body content ${Date.now()}`;
-      await editorPage.updateTitle(updatedTitle);
-      await editorPage.updateBody(updatedBody);
-      await editorPage.publish();
+    // Publishing gives the article a new slug. Point cleanup at the new slug
+    // so the fixture deletes the article once, without a guaranteed 404.
+    const pathParts = new URL(page.url()).pathname.split("/article/");
+    article.slug = pathParts[pathParts.length - 1];
 
-      // Assert redirection.
-      await expect(page).toHaveURL(/\/article\//, { timeout: 10000 });
-
-      // Assert UI content.
-      await articlePage.expectTitle(updatedTitle);
-
-      // Extract new slug.
-      const currentUrl = new URL(page.url());
-      const pathParts = currentUrl.pathname.split("/article/");
-      finalSlug = pathParts[pathParts.length - 1];
-
-      // Assert API content.
-      const freshUser = await api.login(testUser.email, testUser.password);
-      const apiArticle = await api.getArticle(finalSlug, freshUser.token);
-      expect(apiArticle.title).toBe(updatedTitle);
-      expect(apiArticle.body).toBe(updatedBody);
-    } finally {
-      // Teardown: delete articles.
-      const cleanupUser = await api.login(testUser.email, testUser.password);
-      await api.deleteArticle(cleanupUser.token, finalSlug);
-      if (finalSlug !== created.slug) {
-        await api.deleteArticle(cleanupUser.token, created.slug);
-      }
-    }
+    // Assert API content.
+    // The token from registration is stale after the UI login, so get a fresh one.
+    const freshUser = await api.login(user.email, user.password);
+    const apiArticle = await api.getArticle(article.slug, freshUser.token);
+    expect(apiArticle.title).toBe(updatedTitle);
+    expect(apiArticle.body).toBe(updatedBody);
   });
 });
