@@ -5,7 +5,7 @@ Last updated: 2026-10-31
 ## Current state
 
 - **Current work package:** WP2 — Reuse Auth State (owner-approved plan, 2026-10-31).
-- **Status:** implementation in progress on `wp2/reuse-auth-state`; PR not opened yet.
+- **Status:** implementation complete locally on `wp2/reuse-auth-state`; PR not opened yet.
 - **CI policy:** environment-dependent failures are accepted and failed jobs are rerun manually (option b in `docs/audit.md` section 12). No retries, sleeps, or timeout increases.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
 - **Baseline:** WP1 merged to `main` as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
@@ -44,6 +44,12 @@ Last updated: 2026-10-31
 - Merged `main` push run [41102844151](https://github.com/ifhamm/QA-Assessment/actions/runs/41102844151) — **SUCCESS**, both jobs.
 - PR run [41102377226](https://github.com/ifhamm/QA-Assessment/actions/runs/41102377226) — **SUCCESS**, both jobs.
 
+### WP2
+
+- [`docs/decisions/WP2-reuse-auth-state.md`](decisions/WP2-reuse-auth-state.md) — auth modes, API-built storage state, per-test token injection, trade-offs.
+- [`docs/pr/WP2-reuse-auth-state.md`](pr/WP2-reuse-auth-state.md) — PR description, assertion parity, evidence.
+- [`docs/metrics.md`](metrics.md) — WP2 before/after section.
+
 ## Baseline summary
 
 - Local: typecheck passes; full Playwright suite 9/9; API 53/53 assertions; visual 2/2; k6 all thresholds pass.
@@ -62,9 +68,20 @@ Last updated: 2026-10-31
 - Local: typecheck passes; 9/9 full suite (1.0 min); cross-layer 29.4 s; UI functional 29.1 s; no `404` cleanup warning.
 - CI: merged `main` push run `41102844151` is green; PR run `41102377226` is green. The earlier branch push run `41100533592` failed the API job for the known public-environment reason; it was not hidden with retries.
 
+## WP2 summary
+
+- `auth.setup.ts` builds `storageState` from an API token; it no longer performs a UI login and no longer throws when `AUTH_EMAIL`/`AUTH_PASSWORD` are absent.
+- A new `authenticatedPage` fixture injects the per-test user's JWT into `localStorage`. Cross-layer and visual editor tests use it instead of UI logins.
+- The UI create test remains the explicit login-flow test; the invalid-login test is unchanged.
+- Dashboard is now part of `test:ui` and therefore CI. `test:ui:functional` preserves the old focused command.
+- Local: typecheck passes; 9/9 full suite (47.2 s); `test:ui` 5/5 (27.0 s); `test:ui:functional` 4/4 (21.1 s); cross-layer 3/3 (20.6 s); visual 3/3 (15.7 s); repeat probe 41/41 (3.8 min).
+- Successful UI logins per full run: 5 → 1; invalid submissions remain 1.
+- The expected `405` user-deletion warnings remain; cleanup semantics are WP3. The full suite had no `404` cleanup warning; the repeat probe produced one public-environment `404` that did not fail the test.
+- CI evidence is pending the PR run.
+
 ## Blockers / decisions needed
 
-1. **WP2 PR.** Implementation is in progress. Open the PR after local verification and wait for both checks before merging.
+1. **WP2 PR.** Implementation is complete locally. Open the PR using `docs/pr/WP2-reuse-auth-state.md` and wait for both checks before merging.
 2. **WP3 scope.** Confirm cleanup semantics, the expected `405` user-deletion warning, and unused `ArticlePage` locators.
 3. **WP5 scope.** Confirm Linux visual baselines and CI integration.
 4. **Do not start WP3 until the owner explicitly approves it.**
