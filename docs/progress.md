@@ -17,7 +17,7 @@ Last updated: 2026-10-31
 | --- | --- | --- | --- |
 | WP0 | Complete, merged | `wp0/baseline-audit` / [#1](https://github.com/ifhamm/QA-Assessment/pull/1) | Merged as `5364f30` on 2026-10-30. Audit docs + minimal CI auth unblock. No test behavior changed. |
 | WP1 | Complete, merged | `wp1/fixtures-abstraction-boundaries` / [#2](https://github.com/ifhamm/QA-Assessment/pull/2) | Merged as `e74a82d` on 2026-10-30. Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
-| WP2 | In progress | `wp2/reuse-auth-state` | Auth fallback, API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
+| WP2 | Complete locally, PR pending | `wp2/reuse-auth-state` | Auth fallback, API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
 | WP3 | Not started | — | Requires explicit approval; plan required before code. |
 | WP4 | Not started | — | Parallelism, worker-scoped setup, and public-API read-after-write reliability. |
 | WP5 | Not started | — | Visual Linux baselines and CI. |
