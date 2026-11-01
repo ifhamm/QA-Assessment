@@ -101,29 +101,19 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`38359351107`](https://github.com/ifhamm/QA-Assessment/actions/runs/38359351107) |
-| Commit | `c5ec4f2` |
+| Run | [`41305646205`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) |
+| Commit | `3fffa6f` (WP3 merge) |
 | Event | push |
-| Conclusion | **failure** |
-| Overall wall | 39 s |
-| API job | success, 16 s |
-| Playwright job | failure, 35 s |
+| Conclusion | **success** |
+| Overall wall | 56 s |
+| API job | success, 14 s |
+| Playwright job | success, 52 s |
 | Typecheck step | success |
-| UI tests step | failure at `setup` |
-| Cross-layer step | skipped |
+| UI tests step | success |
+| Cross-layer step | success |
 | HTML report artifact | uploaded |
 
-Failure:
-
-```text
-Error: AUTH_EMAIL and AUTH_PASSWORD must be set for the authentication setup.
-  at tests/auth.setup.ts:13:11
-1 failed
-  [setup] > tests/auth.setup.ts:8:6 > authenticate via API
-3 did not run
-```
-
-The workflow provides `BASE_URL` and `API_BASE_URL` only. The setup project does not use its fallback when the auth variables are absent because it throws first.
+The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
 ### Last green run
 
@@ -325,7 +315,14 @@ Conclusion: the backend effectively keeps one valid identity at a time. Any test
 | `npm run test:api` | 15 requests / 53 assertions, 0 failed (6.2 s) |
 | Snapshots | Unchanged; no `--update-snapshots` used |
 
-CI evidence pending the PR run. WP4 owns raising the worker default and consolidating the public-API reliability work.
+### CI after merge
+
+| Run | Event | API job | Playwright job | Result |
+| --- | --- | --- | --- | --- |
+| [`41305629458`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305629458) | pull_request | fail (10 s) | fail (58 s): UI passed, cross-layer failed | PR run red; consistent with the public-environment behavior, recorded as-is |
+| [`41305646205`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) | push (`main`, `3fffa6f`) | pass (14 s) | pass (52 s) | **green**, both jobs; overall 56 s |
+
+The PR run is the evidence the handover asked for, and it is red. It is not hidden: the same commit tree passed both jobs on the merged `main` push run moments later, which points to the environment rather than the diff. No retry was added to make it green. WP4 owns consolidating this reliability work.
 
 ## Reporting quality
 

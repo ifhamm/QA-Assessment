@@ -4,12 +4,12 @@ Last updated: 2026-11-01
 
 ## Current state
 
-- **Current work package:** WP3 — Test Data Architecture (owner-approved plan, 2026-10-31).
-- **Status:** implementation and local verification complete on `wp3/test-data-architecture`; PR pending.
+- **Current work package:** WP4 — Parallelism & Reliability.
+- **Status:** WP3 is merged. WP4 branch `wp4/parallelism-reliability` starts from updated `main` (`3fffa6f`); implementation is blocked on the owner's decision about the public API's global token behavior.
 - **CI policy:** environment-dependent failures are accepted and failed jobs are rerun manually (option b in `docs/audit.md` section 12). No retries, sleeps, or timeout increases.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
-- **Baseline:** WP2 merged to `main` as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
-- **Next work package:** WP4 — not started. Do not pull parallelism/retry work forward.
+- **Baseline:** WP3 merged to `main` as `3fffa6f` (PR [#4](https://github.com/ifhamm/QA-Assessment/pull/4)); WP2 merged as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
+- **Next work package:** WP4 — decision required before code (see Blockers).
 
 ## Work package tracker
 
@@ -18,8 +18,8 @@ Last updated: 2026-11-01
 | WP0 | Complete, merged | `wp0/baseline-audit` / [#1](https://github.com/ifhamm/QA-Assessment/pull/1) | Merged as `5364f30` on 2026-10-30. Audit docs + minimal CI auth unblock. No test behavior changed. |
 | WP1 | Complete, merged | `wp1/fixtures-abstraction-boundaries` / [#2](https://github.com/ifhamm/QA-Assessment/pull/2) | Merged as `e74a82d` on 2026-10-30. Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
 | WP2 | Complete, merged | `wp2/reuse-auth-state` / [#3](https://github.com/ifhamm/QA-Assessment/pull/3) | Merged as `90e66ec` on 2026-10-31. API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
-| WP3 | Complete locally, PR pending | `wp3/test-data-architecture` | Worker-aware data factories, fixture-owned best-effort cleanup, `--grep` and `--fully-parallel` evidence, found the public API's global token defect. |
-| WP4 | Not started | — | Parallelism, worker-scoped setup, and the public-API identity/token reliability work WP3 exposed. |
+| WP3 | Complete, merged | `wp3/test-data-architecture` / [#4](https://github.com/ifhamm/QA-Assessment/pull/4) | Merged as `3fffa6f` on 2026-11-01. Worker-aware data factories, fixture-owned best-effort cleanup, `--grep` and `--fully-parallel` evidence, found the public API's global token defect. CI: main push green; PR run red (environment). |
+| WP4 | In progress — decision pending | `wp4/parallelism-reliability` | Branched from `3fffa6f`. Parallelism, worker-scoped setup, and the public-API identity/token reliability work WP3 exposed. No config change until the owner chooses a direction. |
 | WP5 | Not started | — | Visual Linux baselines and CI. |
 | WP6 | Not started | — | Requires explicit approval; plan required before code. |
 | WP7 | Not started | — | — |
@@ -55,6 +55,9 @@ Last updated: 2026-11-01
 - [`docs/decisions/WP3-test-data-architecture.md`](decisions/WP3-test-data-architecture.md) — worker-aware factories, best-effort cleanup, the `405` decision, and the API identity probe.
 - [`docs/pr/WP3-test-data-architecture.md`](pr/WP3-test-data-architecture.md) — PR description.
 - [`docs/metrics.md`](metrics.md) — WP3 isolation evidence and API probes.
+- PR [#4](https://github.com/ifhamm/QA-Assessment/pull/4), merge commit `3fffa6f`.
+- PR run [41305629458](https://github.com/ifhamm/QA-Assessment/actions/runs/41305629458) — **failure**: Playwright job passed UI but failed cross-layer; API job failed. Recorded as the known public-environment failure, not hidden.
+- Merged `main` push run [41305646205](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) — **SUCCESS**, both jobs (API 14 s, Playwright 52 s), commit `3fffa6f`.
 
 ## Baseline summary
 
@@ -95,10 +98,11 @@ Last updated: 2026-11-01
 - Evidence: 9/9 tests pass alone via `--grep`; 9/9 with `--fully-parallel --workers=1` (1.0 min) and `--fully-parallel --workers=2` (59.4 s); repeat probe 41/41 (5.2 min); typecheck passes; API suite 53/53 assertions.
 - 4-worker runs (7/9 and 8/9) failed because the public API rotates **other users'** tokens on registration/login — verified with a direct API probe: 6/8 concurrent registration tokens resolved to a different user, and sequential earlier tokens became `401`. This is recorded as a public-environment defect, not a data collision; no retries, sleeps, or worker changes were made.
 - Defaults unchanged (`fullyParallel: false`, `workers: 1`, `retries: 0`); the 4-worker default flip belongs to WP4.
+- CI: PR run `41305629458` failed (Playwright cross-layer + API) while the merged `main` push run `41305646205` passed both jobs at `3fffa6f`. Both runs are recorded; the PR failure is consistent with the public-environment behavior above and was not retried or hidden.
 
 ## Blockers / decisions needed
 
-1. **WP3 PR (open in the GitHub UI).** Branch pushed; body ready at `docs/pr/WP3-test-data-architecture.md`. Wait for both checks, then merge.
-2. **WP4 needs the reliability decision.** The public API cannot keep concurrent identities (probe evidence in `docs/metrics.md`). Options: stable self-hosted instance, per-run identity coordination, or accepting one worker in CI. WP4 should start here.
+1. **WP3 PR description is empty.** The PR is merged, but [#4](https://github.com/ifhamm/QA-Assessment/pull/4) has no description. Paste `docs/pr/WP3-test-data-architecture.md` into it (and retitle it `WP3: Test Data Architecture`) in the GitHub UI so the merge history satisfies the DoD.
+2. **WP4 needs the reliability decision.** The public API cannot keep concurrent identities (probe evidence in `docs/metrics.md`). Options: stable self-hosted instance, per-run identity coordination, or accepting one worker in CI. WP4 must not start coding until this is chosen.
 3. **WP5 scope.** Confirm Linux visual baselines and CI integration.
 4. **CI policy (resolved for WP1–WP3).** Accept environment-dependent failures and rerun failed jobs manually. Revisit if the failure frequency rises.
