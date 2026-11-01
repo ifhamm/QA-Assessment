@@ -256,6 +256,77 @@ Branch `wp2/reuse-auth-state`, base `main` at `e74a82d`. Local runs: Windows 11,
 
 CI evidence will be added after the PR run. The public environment remains intermittent; failures are recorded and rerun manually, not hidden.
 
+## WP3 — Test Data Architecture (2026-11-01)
+
+Branch `wp3/test-data-architecture`, base `main` at `90e66ec`. Local runs: Windows 11, Node 24.13.0, Playwright 1.63.0. Defaults untouched: `fullyParallel: false`, `workers: 1`, `retries: 0`; the parallel evidence below uses CLI overrides (WP4 owns the defaults).
+
+### Before / after
+
+| Metric | Before (WP2) | After WP3 |
+| --- | ---: | ---: |
+| Playwright test executions | 9 | 9 |
+| Serial full suite | 9 passed, 47.2 s | 9 passed, 59.6 s (public-environment variance; same assertions) |
+| Tests passing alone (`--grep`) | not established | **9/9 PASS** |
+| `--fully-parallel --workers=1` | n/a | 9 passed (1.0 min) |
+| `--fully-parallel --workers=2` | n/a | 9 passed (59.4 s) |
+| `--fully-parallel --workers=4` | n/a | 7/9 and 8/9 across 2 runs; failures traced to the public API's identity behavior (below), not to data collisions |
+| UI `tests/ui --repeat-each=10` | 41/41, 3.8 min | 41/41, 5.2 min |
+| Successful UI logins per full run | 1 + 1 invalid | 1 + 1 invalid (unchanged) |
+| Expected `405` user-deletion warnings | 4 per full run | 4 per full run |
+| Sites generating synthetic users inline | 3 (`user` fixture, `auth.setup.ts`, `ui-functional.spec.ts`) | **0** — all use `syntheticUser()` |
+| Hard-coded emails/usernames/slugs that could collide | 0 | 0 |
+| Confirmed data collisions | n/a | 0 |
+| `fullyParallel` default | `false` | `false` (unchanged; acceptance met via CLI override) |
+
+### Isolation evidence
+
+| Probe | Result |
+| --- | --- |
+| 9 single-test runs with `--grep` | All pass; setup dependency runs each time |
+| `--fully-parallel --workers=1` | 9/9 in 1.0 min |
+| `--fully-parallel --workers=2` | 9/9 in 59.4 s |
+| `--fully-parallel --workers=4`, run 1 | 7/9; both cross-layer tests saw another run's identity |
+| `--fully-parallel --workers=4`, run 2 | 8/9; cross-layer test 1 saw the setup user's identity |
+| `tests/ui --repeat-each=10` | 41/41; no article `404` cleanup warning |
+| Cleanup-on-failure probe (temporary spec, removed before commit) | A deliberately failing test still ran teardown; the fixture user deletion was attempted (`405` warning) and a later API read of the article returned `404`, confirming deletion |
+
+### API identity probe (evidence for the 4-worker failures)
+
+Run with plain `fetch` against `https://api.realworld.show/api`, outside the test suite:
+
+| Probe | Result |
+| --- | --- |
+| 8 concurrent registrations → `GET /user` with each returned token | **6/8 tokens resolved to a different user** |
+| Batched registration (1, 2, 3 at a time) | 4/8, 5/8, and 8/9 mismatches respectively: higher concurrency is worse, but not required for failure |
+| Sequential register → immediate token check; check again after more registrations/logins | Immediate identity is correct; after later registrations/logins most earlier tokens are `401` — registrations and logins rotate **other users'** tokens |
+
+Conclusion: the backend effectively keeps one valid identity at a time. Any test that registers or logs in can invalidate another test's token, which is why parallel runs fail and why the failing tests showed a different username than their own. WP3's per-test/per-worker data (users, articles, slugs) is unique and did not collide; the failures are a server-side identity defect. WP4 owns the response.
+
+### Data layout
+
+| Item | Before | After |
+| --- | --- | --- |
+| Identifier format | `Date.now()` + 6 random characters | `<runId>-w<workerIndex>-<counter>` (`runId` = 8 chars of `crypto.randomUUID()` per process) |
+| Uniqueness guarantee | "Almost certainly unique" | Random run id separates processes; monotonic counter separates calls; uniqueness does not depend on `workerIndex` being passed |
+| Logging of cleanup failures | API-layer warnings only, teardown errors could replace the test failure | `bestEffortCleanup()` catches, labels, logs, and never throws |
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | exit 0 |
+| `npx playwright test --list` | 9 tests in 6 files |
+| `npx playwright test --reporter=list` | 9 passed (59.6 s) |
+| 9 × `--grep` single-test runs | 9/9 PASS |
+| `npx playwright test --fully-parallel --workers=1` | 9 passed (1.0 min) |
+| `npx playwright test --fully-parallel --workers=2` | 9 passed (59.4 s) |
+| `npx playwright test tests/ui --repeat-each=10` | 41/41 passed (5.2 min) |
+| Cleanup-on-failure probe | Test failed by design; article deleted (later read: `404`); user deletion attempted (`405` warning); probe file deleted before commit |
+| `npm run test:api` | 15 requests / 53 assertions, 0 failed (6.2 s) |
+| Snapshots | Unchanged; no `--update-snapshots` used |
+
+CI evidence pending the PR run. WP4 owns raising the worker default and consolidating the public-API reliability work.
+
 ## Reporting quality
 
 | Metric | Baseline |

@@ -160,7 +160,8 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 │   ├── cross-layer/                  # API <-> UI consistency tests
 │   ├── ui/                           # Playwright UI functional tests
 │   ├── visual/                       # Visual regression tests and baselines
-│   └── test-data.ts                  # Synthetic user/article generators
+│   ├── cleanup.ts                    # Best-effort cleanup wrapper
+│   └── test-data.ts                  # Worker-aware synthetic user/article generators
 ├── .env.example
 ├── package.json
 ├── package-lock.json
@@ -180,11 +181,13 @@ The current Playwright configuration uses Chromium, a fixed 1280x720 viewport, o
 
 ## Test Data and Cleanup
 
-`tests/test-data.ts` generates unique users and articles by combining the current timestamp with a random suffix. This prevents repeated runs from colliding with previously created data.
+`tests/test-data.ts` generates unique users and articles from three tiers of separation: a random run id assigned once per Playwright worker process, a visible worker-index label, and a monotonic counter inside that process. This makes identifier and slug collisions impossible across tests and workers, so the suite's isolation cannot depend on timestamps or execution order.
 
-Article-producing Playwright tests use `try/finally` cleanup so article deletion is still attempted when an assertion fails after the article has already been created. Cleanup is performed through the API because it is faster and more deterministic than navigating through the UI solely for teardown.
+Playwright fixtures own the data lifecycle: setup via API, test, best-effort cleanup via API. Cleanup is wrapped by `tests/cleanup.ts`, which logs any cleanup failure without replacing the test result, so teardown problems stay visible in the logs and the test failure stays about the product. One deliberate exception remains: the UI test that creates an article through the browser cannot be pre-created by a fixture, so it extracts the slug from the page URL after publish (also when the redirect assertion fails) and cleans up at the end of the test.
 
-The public practice API does not provide a user-deletion flow used by this suite, so synthetic user accounts created during tests can remain on the shared environment. Unique credentials prevent these accounts from interfering with future runs.
+The public practice API does not provide a user-deletion flow used by this suite, so synthetic user accounts created during tests can remain on the shared environment; the suite logs a `405` warning per attempted deletion to keep that leak visible. Unique credentials prevent these accounts from interfering with future runs.
+
+Tests do not share data or state with each other: data-owning tests use their own per-test users, the dashboard is the only consumer of the shared setup identity, and every test passes on its own (`--grep`) as well as with `--fully-parallel --workers=1` and `2`. Higher worker counts and the default `fullyParallel` switch are deliberately not enabled yet against the public RealWorld backend, which changes identity for users under concurrent registration/login; that reliability work is tracked separately.
 
 The Postman/Newman collection also creates unique data and completes its main article lifecycle by deleting the created article and verifying that it is no longer available.
 
@@ -228,6 +231,7 @@ This avoids load-testing the shared public RealWorld practice environment.
 
 - Functional and cross-layer browser coverage currently targets Chromium only; Firefox and WebKit projects can be added later for cross-browser coverage.
 - Tests currently use one Playwright worker. Parallel execution or sharding was intentionally not added because the suite is small and the target is a shared public environment.
+- The public RealWorld backend rotates tokens for other users whenever a registration or login happens, so concurrently running tests cannot rely on their demonstrated identities. Data isolation is proven per test, worker, and `--fully-parallel` verification; a stable parallel path needs the public reliability work that is tracked separately.
 - Visual baselines were generated for headless Chromium on Windows. Cross-platform visual execution would require reviewed baselines in a consistent CI environment or a containerized visual-test environment.
 - Optional visual tests are currently kept separate from the required CI UI/cross-layer steps to avoid platform-specific screenshot noise.
 - The optional k6 suite is a low-load local baseline rather than a production-scale capacity test. Future extensions could add arrival-rate scenarios, authenticated users, stress/spike/soak testing, and performance smoke checks in CI.
