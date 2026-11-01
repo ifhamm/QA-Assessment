@@ -1,11 +1,11 @@
 # Progress
 
-Last updated: 2026-10-31
+Last updated: 2026-11-01
 
 ## Current state
 
 - **Current work package:** WP3 — Test Data Architecture (owner-approved plan, 2026-10-31).
-- **Status:** implementation in progress on `wp3/test-data-architecture`.
+- **Status:** implementation and local verification complete on `wp3/test-data-architecture`; PR pending.
 - **CI policy:** environment-dependent failures are accepted and failed jobs are rerun manually (option b in `docs/audit.md` section 12). No retries, sleeps, or timeout increases.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
 - **Baseline:** WP2 merged to `main` as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
@@ -18,8 +18,8 @@ Last updated: 2026-10-31
 | WP0 | Complete, merged | `wp0/baseline-audit` / [#1](https://github.com/ifhamm/QA-Assessment/pull/1) | Merged as `5364f30` on 2026-10-30. Audit docs + minimal CI auth unblock. No test behavior changed. |
 | WP1 | Complete, merged | `wp1/fixtures-abstraction-boundaries` / [#2](https://github.com/ifhamm/QA-Assessment/pull/2) | Merged as `e74a82d` on 2026-10-30. Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
 | WP2 | Complete, merged | `wp2/reuse-auth-state` / [#3](https://github.com/ifhamm/QA-Assessment/pull/3) | Merged as `90e66ec` on 2026-10-31. API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
-| WP3 | In progress | `wp3/test-data-architecture` | Owner-approved plan. Worker-aware factories, fixture-owned cleanup, isolation evidence. |
-| WP4 | Not started | — | Parallelism, worker-scoped setup, and public-API read-after-write reliability. |
+| WP3 | Complete locally, PR pending | `wp3/test-data-architecture` | Worker-aware data factories, fixture-owned best-effort cleanup, `--grep` and `--fully-parallel` evidence, found the public API's global token defect. |
+| WP4 | Not started | — | Parallelism, worker-scoped setup, and the public-API identity/token reliability work WP3 exposed. |
 | WP5 | Not started | — | Visual Linux baselines and CI. |
 | WP6 | Not started | — | Requires explicit approval; plan required before code. |
 | WP7 | Not started | — | — |
@@ -49,6 +49,12 @@ Last updated: 2026-10-31
 - [`docs/decisions/WP2-reuse-auth-state.md`](decisions/WP2-reuse-auth-state.md) — auth modes, API-built storage state, per-test token injection, trade-offs.
 - [`docs/pr/WP2-reuse-auth-state.md`](pr/WP2-reuse-auth-state.md) — PR description, assertion parity, evidence.
 - [`docs/metrics.md`](metrics.md) — WP2 before/after section.
+
+### WP3
+
+- [`docs/decisions/WP3-test-data-architecture.md`](decisions/WP3-test-data-architecture.md) — worker-aware factories, best-effort cleanup, the `405` decision, and the API identity probe.
+- [`docs/pr/WP3-test-data-architecture.md`](pr/WP3-test-data-architecture.md) — PR description.
+- [`docs/metrics.md`](metrics.md) — WP3 isolation evidence and API probes.
 
 ## Baseline summary
 
@@ -80,10 +86,19 @@ Last updated: 2026-10-31
 - The expected `405` user-deletion warnings remain; cleanup semantics are WP3. The full suite had no `404` cleanup warning; the repeat probe produced one public-environment `404` that did not fail the test.
 - CI evidence is pending the PR run.
 
+## WP3 summary
+
+- `tests/test-data.ts` is now worker-aware: a per-process random run id, a visible worker-index label, and a monotonic counter make identifier collisions impossible across tests and workers; the `user` fixture, `auth.setup.ts`, and UI tests all use the factories.
+- Fixtures own the lifecycle uniformly: setup via API → test → best-effort cleanup via API through `tests/cleanup.ts`, which logs failures without replacing the test result.
+- The `405` user-deletion warning stays one per attempted deletion; deduplication was rejected because it hides the real leak count. The setup user remains infrastructure and is not deleted (no endpoint).
+- The UI create test still owns its article (created through the UI) and now recovers the slug from the URL when the redirect assertion fails, so a published article is still deleted.
+- Evidence: 9/9 tests pass alone via `--grep`; 9/9 with `--fully-parallel --workers=1` (1.0 min) and `--fully-parallel --workers=2` (59.4 s); repeat probe 41/41 (5.2 min); typecheck passes; API suite 53/53 assertions.
+- 4-worker runs (7/9 and 8/9) failed because the public API rotates **other users'** tokens on registration/login — verified with a direct API probe: 6/8 concurrent registration tokens resolved to a different user, and sequential earlier tokens became `401`. This is recorded as a public-environment defect, not a data collision; no retries, sleeps, or worker changes were made.
+- Defaults unchanged (`fullyParallel: false`, `workers: 1`, `retries: 0`); the 4-worker default flip belongs to WP4.
+
 ## Blockers / decisions needed
 
-1. **WP2 PR.** Implementation is complete locally. Open the PR using `docs/pr/WP2-reuse-auth-state.md` and wait for both checks before merging.
-2. **WP3 scope.** Confirm cleanup semantics, the expected `405` user-deletion warning, and unused `ArticlePage` locators.
+1. **WP3 PR (open in the GitHub UI).** Branch pushed; body ready at `docs/pr/WP3-test-data-architecture.md`. Wait for both checks, then merge.
+2. **WP4 needs the reliability decision.** The public API cannot keep concurrent identities (probe evidence in `docs/metrics.md`). Options: stable self-hosted instance, per-run identity coordination, or accepting one worker in CI. WP4 should start here.
 3. **WP5 scope.** Confirm Linux visual baselines and CI integration.
-4. **Do not start WP3 until the owner explicitly approves it.**
-5. **CI policy (resolved for WP1/WP2).** Accept environment-dependent failures and rerun failed jobs manually. Revisit a stable test target if the failure frequency rises.
+4. **CI policy (resolved for WP1–WP3).** Accept environment-dependent failures and rerun failed jobs manually. Revisit if the failure frequency rises.
