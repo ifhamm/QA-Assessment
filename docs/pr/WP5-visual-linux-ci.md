@@ -107,7 +107,10 @@ on `7045feb`, push, **success** in 2 m 24 s:
 
 The final docs commit `d85fa39` was green again in
 [run `41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061)
-(2 m 24 s: API 1 m 40 s, Playwright 2 m 20 s, Visual 1 m 50 s).
+(2 m 24 s: API 1 m 40 s, Playwright 2 m 20 s, Visual 1 m 50 s). The docs-only
+follow-up `873e837` passed in
+[run `41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944)
+(2 m 20 s: API 1 m 09 s, Playwright 2 m 16 s, Visual 1 m 46 s).
 
 ### Intentional failure
 

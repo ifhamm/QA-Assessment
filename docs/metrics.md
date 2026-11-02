@@ -472,12 +472,14 @@ the `@playwright/test` `1.63.0` in `package-lock.json`.
 | [`41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923) | push (branch) | `7045feb` | success | 2 m 24 s | 1 m 08 s | 2 m 14 s | 1 m 50 s |
 | [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) | push (experiment) | `7254cb3` | failure (expected) | 2 m 42 s | 1 m 08 s | 2 m 42 s | 1 m 49 s |
 | [`41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061) | push (branch, final) | `d85fa39` | success | 2 m 24 s | 1 m 40 s | 2 m 20 s | 1 m 50 s |
+| [`41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944) | push (branch, docs) | `873e837` | success | 2 m 20 s | 1 m 09 s | 2 m 16 s | 1 m 46 s |
 
 The first run is the WP5 acceptance run: the `Visual Tests` job logged
 `2 passed (1.9s)` inside the Playwright image, and the Playwright job logged
 `5 passed` + `3 passed` with no `Retry #` line. The API job was green as well.
 The final docs-only commit `d85fa39` was green again with the same three jobs
-(Visual 1 m 50 s), so the evidence commit itself is covered.
+(Visual 1 m 50 s), so the evidence commit itself is covered. The subsequent
+docs-only commit `873e837` was also green (Visual 1 m 46 s).
 
 The experiment run is the intentional-failure proof. Only the `Visual Tests`
 job failed; API and Playwright stayed green. The job uploaded the
