@@ -101,13 +101,13 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`41305646205`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) |
-| Commit | `3fffa6f` (WP3 merge) |
+| Run | [`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575) |
+| Commit | `494d243` (WP4 merge) |
 | Event | push |
 | Conclusion | **success** |
-| Overall wall | 56 s |
-| API job | success, 14 s |
-| Playwright job | success, 52 s |
+| Overall wall | 2 m 04 s |
+| API job | success, 1 m 57 s |
+| Playwright job | success, 1 m 58 s |
 | Typecheck step | success |
 | UI tests step | success |
 | Cross-layer step | success |
@@ -115,8 +115,9 @@ Breakdown:
 
 The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
-The latest green run is the WP3 merge run above. WP4 CI evidence will replace it
-once the owner opens the PR.
+The latest green run is the WP4 merge run above. The same tip also passed the PR
+run and the branch push run before the merge; see the WP4 section below for
+durations.
 
 ### What runs in CI
 
@@ -415,8 +416,22 @@ repository is k6 load-test pacing, not a UI wait.
 The WP4 workflow builds the self-hosted stack in both jobs and no longer reads
 `BASE_URL`, `API_BASE_URL`, `AUTH_EMAIL`, or `AUTH_PASSWORD` from repository
 variables. Local retries are 0; CI uses one retry with `on-first-retry` tracing.
-CI evidence is pending the owner-opened PR; it will be recorded here after the
-run. The local 10-run evidence above is retry-free and is the stability claim.
+The local 10-run evidence above is retry-free and is the stability claim.
+
+PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5) merged the branch as
+`494d243` on 2026-11-02. All three runs on the final tree were green on the first
+attempt (`run_attempt: 1`), so no CI retry was consumed:
+
+| Run | Event | Commit | Conclusion | Wall | API job | Playwright job |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| [`41462038159`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462038159) | push (branch) | `3931d12` | success | 1 m 49 s | 1 m 08 s | 1 m 44 s |
+| [`41462371220`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462371220) | pull_request | `3931d12` | success | 2 m 04 s | 1 m 17 s | 1 m 59 s |
+| [`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575) | push (`main`) | `494d243` | success | 2 m 04 s | 1 m 57 s | 1 m 58 s |
+
+Stack startup dominates CI time: 61-66 s for the Playwright job and 46-52 s for
+the API job, versus 1-5 s for the test steps. Both stay well inside the 20/25
+minute job timeouts, and the HTML report is attached to run `41462400575` as the
+`playwright-report` artifact.
 
 ## Reporting quality
 

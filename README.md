@@ -288,13 +288,13 @@ variables:
 - Playwright installs Chromium and uploads the HTML report as an artifact,
   retained for 7 days.
 
-Latest recorded green run (WP3 merge, before the WP4 stack):
+Latest recorded green run (WP4 merge, commit `494d243`):
 
-[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205)
+[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575)
 
-WP4 CI evidence will be recorded after the owner opens the PR. The workflow uses
-one CI retry with `on-first-retry` tracing; local stability evidence remains
-retry-free.
+The PR run (`41462371220`) and the branch push run (`41462038159`) on the same
+tip were green as well. The workflow uses one CI retry with `on-first-retry`
+tracing; local stability evidence remains retry-free.
 
 ## Optional Work
 
