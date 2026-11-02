@@ -5,13 +5,17 @@ on:
   pull_request:
 
 env:
-  BASE_URL: ${{ vars.BASE_URL }}
-  API_BASE_URL: ${{ vars.API_BASE_URL }}
+  # The workflow target is the self-hosted stack, not the shared public demo.
+  # Keeping the URL here also prevents a stale repository variable from
+  # silently pointing CI back at the public instance.
+  BASE_URL: http://localhost:8081
+  API_BASE_URL: http://localhost:8081/api
 
 jobs:
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -26,17 +30,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Start self-hosted API
+        run: docker compose up -d --build --wait api
+
       - name: Run API tests
-        run: npm run test:api
+        run: npm run test:api:local
+
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v --remove-orphans
 
   playwright-tests:
     name: Playwright Tests
     runs-on: ubuntu-latest
-    env:
-      # Optional. If these variables are unset or do not authenticate, the
-      # setup project creates a session-local user and writes that state.
-      AUTH_EMAIL: ${{ vars.AUTH_EMAIL }}
-      AUTH_PASSWORD: ${{ vars.AUTH_PASSWORD }}
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -57,11 +64,18 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Start self-hosted RealWorld stack
+        run: npm run stack:up
+
       - name: Run UI tests
         run: npm run test:ui
 
       - name: Run cross-layer tests
         run: npm run test:cross
+
+      - name: Stop stack
+        if: always()
+        run: npm run stack:down
 
       - name: Upload Playwright report
         if: always()
