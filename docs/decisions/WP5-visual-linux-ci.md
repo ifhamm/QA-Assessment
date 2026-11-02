@@ -133,3 +133,21 @@ npm run stack:down
 Expected: 7 host tests pass, 2 visual tests pass, and the repeat probe passes
 10/10. The CI `Visual Tests` job must be green, and the experiment branch must
 produce a visible diff.
+
+## Evidence
+
+- Green branch push: [run `41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923)
+  on `7045feb` (2 m 24 s). Visual job 1 m 50 s, `2 passed (1.9s)`, no retry;
+  Playwright job 2 m 14 s, 5 + 3 passed, no retry; API job 1 m 08 s.
+- Intentional failure: [run `41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007)
+  on experiment commit `7254cb3`. Only `Visual Tests` failed (1 m 49 s); the
+  other two jobs passed. Artifact `visual-diffs` (1.2 MB) contained the
+  expected, actual, and diff images.
+- Committed images:
+  [`wp5-intentional-failure-diff.png`](../evidence/wp5-intentional-failure-diff.png)
+  and
+  [`wp5-intentional-failure-actual.png`](../evidence/wp5-intentional-failure-actual.png).
+- The experiment branch was deleted after the artifact was captured; the run
+  and artifact URL are the durable record.
+- Local: `npm run test:local` 7 passed (19.6 s); `npm run test:visual:linux`
+  2 passed (7.4 s); `--repeat-each=5` 10/10 (23.4 s); typecheck exit 0.

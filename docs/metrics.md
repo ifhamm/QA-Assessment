@@ -467,8 +467,29 @@ the `@playwright/test` `1.63.0` in `package-lock.json`.
 
 ### CI
 
-Pending the first push of this branch; the results, including the intentional
-failure evidence, will be recorded here once the runs complete.
+| Run | Event | Commit | Conclusion | Wall | API job | Playwright job | Visual job |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+| [`41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923) | push (branch) | `7045feb` | success | 2 m 24 s | 1 m 08 s | 2 m 14 s | 1 m 50 s |
+| [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) | push (experiment) | `7254cb3` | failure (expected) | 2 m 42 s | 1 m 08 s | 2 m 42 s | 1 m 49 s |
+
+The first run is the WP5 acceptance run: the `Visual Tests` job logged
+`2 passed (1.9s)` inside the Playwright image, and the Playwright job logged
+`5 passed` + `3 passed` with no `Retry #` line. The API job was green as well.
+
+The experiment run is the intentional-failure proof. Only the `Visual Tests`
+job failed; API and Playwright stayed green. The job uploaded the
+`visual-diffs` artifact (1.2 MB) containing:
+
+- `login-page-expected.png` — the committed Linux baseline;
+- `login-page-actual.png` — the red-background render;
+- `login-page-diff.png` — the pixel diff.
+
+The two images are committed as
+[`wp5-intentional-failure-diff.png`](evidence/wp5-intentional-failure-diff.png)
+and
+[`wp5-intentional-failure-actual.png`](evidence/wp5-intentional-failure-actual.png).
+The experiment branch `experiment/wp5-visual-failure` was deleted after the
+artifact was captured; the run link above remains the durable evidence.
 
 ## Reporting quality
 

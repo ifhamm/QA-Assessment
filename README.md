@@ -1,6 +1,6 @@
 # QA Automation Assessment
 
-This repository contains the automation deliverables for the RealWorld / Conduit QA Automation Mentorship Assessment. The solution covers API regression testing, UI functional testing, cross-layer verification, CI execution, and optional visual regression and performance testing.
+This repository contains the automation deliverables for the RealWorld / Conduit QA Automation Mentorship Assessment. The solution covers API regression testing, UI functional testing, cross-layer verification, CI execution including visual regression, and optional performance testing.
 
 ## Test Coverage
 
@@ -306,24 +306,28 @@ variables:
 - Playwright installs Chromium and uploads the HTML report as an artifact,
   retained for 7 days.
 
-Latest recorded green run (WP4 merge, commit `494d243`):
+Latest recorded green run (WP5 branch, commit `7045feb`, not merged yet):
 
-[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575)
+[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923)
 
-The PR run (`41462371220`) and the branch push run (`41462038159`) on the same
-tip were green as well. The workflow uses one CI retry with `on-first-retry`
-tracing; local stability evidence remains retry-free.
+The run was green in 2 m 24 s: API 1 m 08 s, Playwright 2 m 14 s, Visual
+1 m 50 s. The workflow uses one CI retry with `on-first-retry` tracing; local
+stability evidence remains retry-free and this run consumed no retry.
 
-## Optional Work
+## Additional Coverage
 
 ### Visual regression
 
-Two Playwright visual checks are included:
+Two Playwright visual checks run in CI:
 
 - Login page
 - Authenticated article editor
 
-The viewport is fixed at 1280x720. The editor test controls its dynamic username content before screenshot comparison so that synthetic test data does not create meaningless visual diffs.
+Both are compared only inside the pinned Playwright Linux container described
+above. The viewport is fixed at 1280x720, animations are disabled, and the
+editor test fixes and masks its generated username so synthetic data cannot
+create a meaningless diff. The baseline-update rules are in the visual section
+under Testing.
 
 ### Performance
 
@@ -339,8 +343,8 @@ This avoids load-testing the shared public RealWorld practice environment.
 - Functional and cross-layer browser coverage currently targets Chromium only; Firefox and WebKit projects can be added later for cross-browser coverage.
 - The default local target is the self-hosted stack. Pointing the suite back at the public demo is still possible through `.env`, but parallel runs there remain unreliable because the public backend rotates other users' tokens during registration/login. The defect and the self-hosted decision are documented in the WP4 decision note.
 - The self-hosted stack pins the frontend and backend to specific commits. Updating those pins is a deliberate maintenance step; the backend also carries one small compatibility patch for the unauthorized-update status code.
-- Visual baselines were generated for headless Chromium on Windows. Cross-platform visual execution would require reviewed baselines in a consistent CI environment or a containerized visual-test environment.
-- Optional visual tests are currently kept separate from the required CI UI/cross-layer steps to avoid platform-specific screenshot noise.
+- Visual baselines are Linux-only and must be produced in the pinned Playwright container. Running the visual project directly on Windows or macOS would compare against a different renderer, so those hosts must use `npm run test:visual`.
+- The visual pages still load Google Fonts and Ionicons over the network. The container fixes the renderer and the committed baseline, but a blocked or failed font request changes the screenshot and fails the job instead of being silently ignored.
 - The optional k6 suite is a low-load local baseline rather than a production-scale capacity test. Future extensions could add arrival-rate scenarios, authenticated users, stress/spike/soak testing, and performance smoke checks in CI.
 - Synthetic test users remain in the disposable self-hosted database until `npm run stack:down` resets it. The `405` cleanup warning is expected because user deletion is not part of the tested API lifecycle.
 
