@@ -133,23 +133,37 @@ npm run test:cross
 
 ### Visual regression tests
 
-```bash
-npm run test:visual
-```
-
-For the self-hosted stack:
+Visual tests render only inside the pinned Playwright container, so local runs,
+CI, and baseline generation share one Linux rendering environment:
 
 ```bash
-npm run test:local -- tests/visual
+npm run stack:up        # build and start the web + API stack
+npm run test:visual     # alias for test:visual:linux
 ```
 
-To intentionally regenerate the reviewed visual baselines after an approved UI change:
+The command runs the two visual tests in
+`mcr.microsoft.com/playwright:v1.63.0-noble` and compares them against the
+committed `*-visual-linux.png` baselines. The old Windows baselines were removed
+because they encoded a different renderer; on any host OS, use the container
+command instead of running the visual project directly.
+
+When an intentional UI change is approved, regenerate the baselines:
 
 ```bash
-npx playwright test tests/visual --update-snapshots
+npm run test:visual:linux:update
 ```
 
-Visual baselines should not be updated simply to make a failing test pass; the visual difference should be reviewed first.
+Rules for changing a baseline:
+
+- A baseline may change only for an intentional, reviewed UI change. The PR must
+  include the visible before/after diff and the reason for the change.
+- Never update a baseline just to make a failing visual test pass.
+- The reviewer of the PR owns the baseline decision.
+- Diff thresholds are the Playwright defaults; do not loosen them without a
+  written justification in the decision note.
+
+CI runs the visual tests in a separate `Visual Tests` job. A failed comparison
+uploads the expected, actual, and diff images as the `visual-diffs` artifact.
 
 ### TypeScript validation
 
@@ -160,12 +174,13 @@ npm run typecheck
 ### All Playwright tests
 
 ```bash
-npm run test:local  # recommended: self-hosted stack
-npm test            # target from .env
+npm run test:local  # self-hosted stack, 7 host-rendered tests
+npm test            # same host suite against the target in .env
 ```
 
-Note that both commands also discover the optional visual tests because the
-Playwright `testDir` is `./tests`. Visual tests are excluded from CI.
+Both commands exclude the `visual` Playwright project on purpose. Visual tests
+are rendered only in the pinned container and run separately with
+`npm run test:visual`.
 
 ### Optional performance test
 
@@ -219,6 +234,7 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 │   └── test-data.ts                  # Worker-aware synthetic user/article generators
 ├── docs/
 │   ├── decisions/                    # One decision note per work package
+│   ├── evidence/                     # Committed visual failure evidence
 │   └── pr/                           # PR descriptions
 ├── .dockerignore
 ├── .env.example
@@ -284,6 +300,8 @@ variables:
   `http://localhost:3000`.
 - **Playwright job** builds both containers, runs typecheck, then the UI and
   cross-layer suites against `http://localhost:8081`.
+- **Visual Tests job** builds both containers and runs the two visual tests
+  inside the pinned Playwright image; failed comparisons upload `visual-diffs`.
 - Each job removes the stack with `docker compose down -v` in an `always()` step.
 - Playwright installs Chromium and uploads the HTML report as an artifact,
   retained for 7 days.

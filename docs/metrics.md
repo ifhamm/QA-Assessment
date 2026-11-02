@@ -433,6 +433,43 @@ the API job, versus 1-5 s for the test steps. Both stay well inside the 20/25
 minute job timeouts, and the HTML report is attached to run `41462400575` as the
 `playwright-report` artifact.
 
+## WP5 - Visual Testing Done Right (2026-11-02)
+
+Branch `wp5/visual-linux-ci`, based on `main` at `494d243` plus the WP4 docs
+follow-up. Local host: Windows 11, Node 24.13.0, Docker Desktop 29.2.0. Visual
+rendering happens only in `mcr.microsoft.com/playwright:v1.63.0-noble`, matching
+the `@playwright/test` `1.63.0` in `package-lock.json`.
+
+### Before / after
+
+| Metric | Before (WP4) | After WP5 |
+| --- | --- | --- |
+| Visual rendering environment | Windows host | Pinned Playwright Linux image |
+| Baselines | `*-chromium-win32.png` (2) | `*-visual-linux.png` (2) |
+| Visual tests in CI | No | Yes, separate `Visual Tests` job |
+| Default local run | 9 tests (visual included) | 7 host tests; 2 visual via container |
+| Failure artifacts | None for visual | expected / actual / diff via `visual-diffs` |
+| Screenshot inputs | Host timezone, locale, scheme | UTC, `en-US`, light |
+| Animations | Playwright default | Explicit `animations: "disabled"` |
+| Diff thresholds | Playwright defaults | Unchanged defaults |
+
+### Local evidence
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | exit 0 |
+| `npx playwright test --list` | 9 tests in 6 files (7 host + 2 visual) |
+| `npm run test:local` | 7 passed (19.6 s, 4 workers) |
+| `npm run test:visual:linux` | 2 passed (7.4 s) |
+| `--project=visual --repeat-each=5` | 10/10 passed (23.4 s) |
+| Baseline dimensions | 1280x720 for both screenshots |
+| Windows baselines | Removed (`*-chromium-win32.png`) |
+
+### CI
+
+Pending the first push of this branch; the results, including the intentional
+failure evidence, will be recorded here once the runs complete.
+
 ## Reporting quality
 
 | Metric | Baseline |
@@ -456,14 +493,14 @@ minute job timeouts, and the HTML report is attached to run `41462400575` as the
 | --- | --- | --- |
 | Typecheck | `npm run typecheck` | Pass (exit 0) |
 | Test discovery | `npx playwright test --list` | 9 tests in 6 files |
-| Default test script | `npm test` | Present (`playwright test`) |
-| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env |
+| Default test script | `npm test` | Present; runs the 7 host tests and excludes the container-only visual project |
+| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env, 7 host tests |
 | API script | `npm run test:api` | Present (public demo) |
 | Local API script | `npm run test:api:local` | Present (self-hosted `localhost:3000`) |
 | Stack scripts | `npm run stack:up`, `npm run stack:down` | Present; `down` removes the disposable SQLite data |
 | UI script | `npm run test:ui` | Present; runs `tests/ui` (functional + dashboard). `test:ui:functional` runs functional only. |
 | Cross-layer script | `npm run test:cross` | Present |
-| Visual script | `npm run test:visual` | Present |
+| Visual script | `npm run test:visual` | Present; runs the 2 visual tests in the pinned Playwright container |
 | Performance script | `cd performance && npm run test:perf` | Present |
 | Lint | N/A | No lint script/config |
 
