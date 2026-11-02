@@ -14,9 +14,7 @@ test("article editor matches visual baseline", async ({
   await expect(editorPage.titleInput).toBeVisible();
   await expect(editorPage.descriptionInput).toBeVisible();
 
-  const usernameLink = page.getByRole("link", {
-    name: user.username,
-  });
+  const usernameLink = navBar.usernameLink(user.username);
 
   await usernameLink.evaluate((el) => {
     const element = el as HTMLElement;

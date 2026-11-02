@@ -2,14 +2,11 @@ import { test, expect } from "../../fixtures/test-base";
 
 test("opens the dashboard as an authenticated user", async ({
   page,
+  navBar,
 }) => {
   await page.goto("/");
 
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(
-    page.getByRole("link", { name: "New Article" })
-  ).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Sign in" })
-  ).not.toBeVisible();
+  await expect(navBar.newArticleLink()).toBeVisible();
+  await expect(navBar.signInLink()).not.toBeVisible();
 });
