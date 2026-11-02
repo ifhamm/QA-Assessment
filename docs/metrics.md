@@ -101,13 +101,13 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`41305646205`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) |
-| Commit | `3fffa6f` (WP3 merge) |
+| Run | [`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575) |
+| Commit | `494d243` (WP4 merge) |
 | Event | push |
 | Conclusion | **success** |
-| Overall wall | 56 s |
-| API job | success, 14 s |
-| Playwright job | success, 52 s |
+| Overall wall | 2 m 04 s |
+| API job | success, 1 m 57 s |
+| Playwright job | success, 1 m 58 s |
 | Typecheck step | success |
 | UI tests step | success |
 | Cross-layer step | success |
@@ -115,8 +115,9 @@ Breakdown:
 
 The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
-The latest green run is the WP3 merge run above. WP4 CI evidence will replace it
-once the owner opens the PR.
+The latest green run is the WP4 merge run above. The same tip also passed the PR
+run and the branch push run before the merge; see the WP4 section below for
+durations.
 
 ### What runs in CI
 
@@ -415,8 +416,85 @@ repository is k6 load-test pacing, not a UI wait.
 The WP4 workflow builds the self-hosted stack in both jobs and no longer reads
 `BASE_URL`, `API_BASE_URL`, `AUTH_EMAIL`, or `AUTH_PASSWORD` from repository
 variables. Local retries are 0; CI uses one retry with `on-first-retry` tracing.
-CI evidence is pending the owner-opened PR; it will be recorded here after the
-run. The local 10-run evidence above is retry-free and is the stability claim.
+The local 10-run evidence above is retry-free and is the stability claim.
+
+PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5) merged the branch as
+`494d243` on 2026-11-02. All three runs on the final tree were green on the first
+attempt (`run_attempt: 1`), so no CI retry was consumed:
+
+| Run | Event | Commit | Conclusion | Wall | API job | Playwright job |
+| --- | --- | --- | --- | ---: | ---: | ---: |
+| [`41462038159`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462038159) | push (branch) | `3931d12` | success | 1 m 49 s | 1 m 08 s | 1 m 44 s |
+| [`41462371220`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462371220) | pull_request | `3931d12` | success | 2 m 04 s | 1 m 17 s | 1 m 59 s |
+| [`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575) | push (`main`) | `494d243` | success | 2 m 04 s | 1 m 57 s | 1 m 58 s |
+
+Stack startup dominates CI time: 61-66 s for the Playwright job and 46-52 s for
+the API job, versus 1-5 s for the test steps. Both stay well inside the 20/25
+minute job timeouts, and the HTML report is attached to run `41462400575` as the
+`playwright-report` artifact.
+
+## WP5 - Visual Testing Done Right (2026-11-02)
+
+Branch `wp5/visual-linux-ci`, based on `main` at `494d243` plus the WP4 docs
+follow-up. Local host: Windows 11, Node 24.13.0, Docker Desktop 29.2.0. Visual
+rendering happens only in `mcr.microsoft.com/playwright:v1.63.0-noble`, matching
+the `@playwright/test` `1.63.0` in `package-lock.json`.
+
+### Before / after
+
+| Metric | Before (WP4) | After WP5 |
+| --- | --- | --- |
+| Visual rendering environment | Windows host | Pinned Playwright Linux image |
+| Baselines | `*-chromium-win32.png` (2) | `*-visual-linux.png` (2) |
+| Visual tests in CI | No | Yes, separate `Visual Tests` job |
+| Default local run | 9 tests (visual included) | 7 host tests; 2 visual via container |
+| Failure artifacts | None for visual | expected / actual / diff via `visual-diffs` |
+| Screenshot inputs | Host timezone, locale, scheme | UTC, `en-US`, light |
+| Animations | Playwright default | Explicit `animations: "disabled"` |
+| Diff thresholds | Playwright defaults | Unchanged defaults |
+
+### Local evidence
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | exit 0 |
+| `npx playwright test --list` | 9 tests in 6 files (7 host + 2 visual) |
+| `npm run test:local` | 7 passed (19.6 s, 4 workers) |
+| `npm run test:visual:linux` | 2 passed (7.4 s) |
+| `--project=visual --repeat-each=5` | 10/10 passed (23.4 s) |
+| Baseline dimensions | 1280x720 for both screenshots |
+| Windows baselines | Removed (`*-chromium-win32.png`) |
+
+### CI
+
+| Run | Event | Commit | Conclusion | Wall | API job | Playwright job | Visual job |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+| [`41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923) | push (branch) | `7045feb` | success | 2 m 24 s | 1 m 08 s | 2 m 14 s | 1 m 50 s |
+| [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) | push (experiment) | `7254cb3` | failure (expected) | 2 m 42 s | 1 m 08 s | 2 m 42 s | 1 m 49 s |
+| [`41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061) | push (branch, final) | `d85fa39` | success | 2 m 24 s | 1 m 40 s | 2 m 20 s | 1 m 50 s |
+| [`41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944) | push (branch, docs) | `873e837` | success | 2 m 20 s | 1 m 09 s | 2 m 16 s | 1 m 46 s |
+
+The first run is the WP5 acceptance run: the `Visual Tests` job logged
+`2 passed (1.9s)` inside the Playwright image, and the Playwright job logged
+`5 passed` + `3 passed` with no `Retry #` line. The API job was green as well.
+The final docs-only commit `d85fa39` was green again with the same three jobs
+(Visual 1 m 50 s), so the evidence commit itself is covered. The subsequent
+docs-only commit `873e837` was also green (Visual 1 m 46 s).
+
+The experiment run is the intentional-failure proof. Only the `Visual Tests`
+job failed; API and Playwright stayed green. The job uploaded the
+`visual-diffs` artifact (1.2 MB) containing:
+
+- `login-page-expected.png` — the committed Linux baseline;
+- `login-page-actual.png` — the red-background render;
+- `login-page-diff.png` — the pixel diff.
+
+The two images are committed as
+[`wp5-intentional-failure-diff.png`](evidence/wp5-intentional-failure-diff.png)
+and
+[`wp5-intentional-failure-actual.png`](evidence/wp5-intentional-failure-actual.png).
+The experiment branch `experiment/wp5-visual-failure` was deleted after the
+artifact was captured; the run link above remains the durable evidence.
 
 ## Reporting quality
 
@@ -441,14 +519,14 @@ run. The local 10-run evidence above is retry-free and is the stability claim.
 | --- | --- | --- |
 | Typecheck | `npm run typecheck` | Pass (exit 0) |
 | Test discovery | `npx playwright test --list` | 9 tests in 6 files |
-| Default test script | `npm test` | Present (`playwright test`) |
-| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env |
+| Default test script | `npm test` | Present; runs the 7 host tests and excludes the container-only visual project |
+| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env, 7 host tests |
 | API script | `npm run test:api` | Present (public demo) |
 | Local API script | `npm run test:api:local` | Present (self-hosted `localhost:3000`) |
 | Stack scripts | `npm run stack:up`, `npm run stack:down` | Present; `down` removes the disposable SQLite data |
 | UI script | `npm run test:ui` | Present; runs `tests/ui` (functional + dashboard). `test:ui:functional` runs functional only. |
 | Cross-layer script | `npm run test:cross` | Present |
-| Visual script | `npm run test:visual` | Present |
+| Visual script | `npm run test:visual` | Present; runs the 2 visual tests in the pinned Playwright container |
 | Performance script | `cd performance && npm run test:perf` | Present |
 | Lint | N/A | No lint script/config |
 

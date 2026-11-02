@@ -1,6 +1,6 @@
 # QA Automation Assessment
 
-This repository contains the automation deliverables for the RealWorld / Conduit QA Automation Mentorship Assessment. The solution covers API regression testing, UI functional testing, cross-layer verification, CI execution, and optional visual regression and performance testing.
+This repository contains the automation deliverables for the RealWorld / Conduit QA Automation Mentorship Assessment. The solution covers API regression testing, UI functional testing, cross-layer verification, CI execution including visual regression, and optional performance testing.
 
 ## Test Coverage
 
@@ -133,23 +133,37 @@ npm run test:cross
 
 ### Visual regression tests
 
-```bash
-npm run test:visual
-```
-
-For the self-hosted stack:
+Visual tests render only inside the pinned Playwright container, so local runs,
+CI, and baseline generation share one Linux rendering environment:
 
 ```bash
-npm run test:local -- tests/visual
+npm run stack:up        # build and start the web + API stack
+npm run test:visual     # alias for test:visual:linux
 ```
 
-To intentionally regenerate the reviewed visual baselines after an approved UI change:
+The command runs the two visual tests in
+`mcr.microsoft.com/playwright:v1.63.0-noble` and compares them against the
+committed `*-visual-linux.png` baselines. The old Windows baselines were removed
+because they encoded a different renderer; on any host OS, use the container
+command instead of running the visual project directly.
+
+When an intentional UI change is approved, regenerate the baselines:
 
 ```bash
-npx playwright test tests/visual --update-snapshots
+npm run test:visual:linux:update
 ```
 
-Visual baselines should not be updated simply to make a failing test pass; the visual difference should be reviewed first.
+Rules for changing a baseline:
+
+- A baseline may change only for an intentional, reviewed UI change. The PR must
+  include the visible before/after diff and the reason for the change.
+- Never update a baseline just to make a failing visual test pass.
+- The reviewer of the PR owns the baseline decision.
+- Diff thresholds are the Playwright defaults; do not loosen them without a
+  written justification in the decision note.
+
+CI runs the visual tests in a separate `Visual Tests` job. A failed comparison
+uploads the expected, actual, and diff images as the `visual-diffs` artifact.
 
 ### TypeScript validation
 
@@ -160,12 +174,13 @@ npm run typecheck
 ### All Playwright tests
 
 ```bash
-npm run test:local  # recommended: self-hosted stack
-npm test            # target from .env
+npm run test:local  # self-hosted stack, 7 host-rendered tests
+npm test            # same host suite against the target in .env
 ```
 
-Note that both commands also discover the optional visual tests because the
-Playwright `testDir` is `./tests`. Visual tests are excluded from CI.
+Both commands exclude the `visual` Playwright project on purpose. Visual tests
+are rendered only in the pinned container and run separately with
+`npm run test:visual`.
 
 ### Optional performance test
 
@@ -219,6 +234,7 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 │   └── test-data.ts                  # Worker-aware synthetic user/article generators
 ├── docs/
 │   ├── decisions/                    # One decision note per work package
+│   ├── evidence/                     # Committed visual failure evidence
 │   └── pr/                           # PR descriptions
 ├── .dockerignore
 ├── .env.example
@@ -284,28 +300,37 @@ variables:
   `http://localhost:3000`.
 - **Playwright job** builds both containers, runs typecheck, then the UI and
   cross-layer suites against `http://localhost:8081`.
+- **Visual Tests job** builds both containers and runs the two visual tests
+  inside the pinned Playwright image; failed comparisons upload `visual-diffs`.
 - Each job removes the stack with `docker compose down -v` in an `always()` step.
 - Playwright installs Chromium and uploads the HTML report as an artifact,
   retained for 7 days.
 
-Latest recorded green run (WP3 merge, before the WP4 stack):
+Green run covering the WP5 implementation (branch commit `d85fa39`):
 
-[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205)
+[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061)
 
-WP4 CI evidence will be recorded after the owner opens the PR. The workflow uses
-one CI retry with `on-first-retry` tracing; local stability evidence remains
-retry-free.
+The run was green in 2 m 24 s: API 1 m 40 s, Playwright 2 m 20 s, Visual
+1 m 50 s. The docs-only follow-up commit `873e837` passed again in
+[run `41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944)
+(2 m 20 s: API 1 m 09 s, Playwright 2 m 16 s, Visual 1 m 46 s). The workflow
+uses one CI retry with `on-first-retry` tracing; local stability evidence
+remains retry-free and these runs consumed no retry.
 
-## Optional Work
+## Additional Coverage
 
 ### Visual regression
 
-Two Playwright visual checks are included:
+Two Playwright visual checks run in CI:
 
 - Login page
 - Authenticated article editor
 
-The viewport is fixed at 1280x720. The editor test controls its dynamic username content before screenshot comparison so that synthetic test data does not create meaningless visual diffs.
+Both are compared only inside the pinned Playwright Linux container described
+above. The viewport is fixed at 1280x720, animations are disabled, and the
+editor test fixes and masks its generated username so synthetic data cannot
+create a meaningless diff. The baseline-update rules are in the visual section
+under Testing.
 
 ### Performance
 
@@ -321,8 +346,8 @@ This avoids load-testing the shared public RealWorld practice environment.
 - Functional and cross-layer browser coverage currently targets Chromium only; Firefox and WebKit projects can be added later for cross-browser coverage.
 - The default local target is the self-hosted stack. Pointing the suite back at the public demo is still possible through `.env`, but parallel runs there remain unreliable because the public backend rotates other users' tokens during registration/login. The defect and the self-hosted decision are documented in the WP4 decision note.
 - The self-hosted stack pins the frontend and backend to specific commits. Updating those pins is a deliberate maintenance step; the backend also carries one small compatibility patch for the unauthorized-update status code.
-- Visual baselines were generated for headless Chromium on Windows. Cross-platform visual execution would require reviewed baselines in a consistent CI environment or a containerized visual-test environment.
-- Optional visual tests are currently kept separate from the required CI UI/cross-layer steps to avoid platform-specific screenshot noise.
+- Visual baselines are Linux-only and must be produced in the pinned Playwright container. Running the visual project directly on Windows or macOS would compare against a different renderer, so those hosts must use `npm run test:visual`.
+- The visual pages still load Google Fonts and Ionicons over the network. The container fixes the renderer and the committed baseline, but a blocked or failed font request changes the screenshot and fails the job instead of being silently ignored.
 - The optional k6 suite is a low-load local baseline rather than a production-scale capacity test. Future extensions could add arrival-rate scenarios, authenticated users, stress/spike/soak testing, and performance smoke checks in CI.
 - Synthetic test users remain in the disposable self-hosted database until `npm run stack:down` resets it. The `405` cleanup warning is expected because user deletion is not part of the tested API lifecycle.
 

@@ -220,5 +220,6 @@ npm run test:local -- tests/ui --repeat-each=10 --workers=4 --reporter=line
 npm run stack:down
 ```
 
-CI evidence for the PR run will be added once the owner opens the PR; the owner
-opens and merges PRs through the GitHub UI.
+PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5) merged the branch as
+`494d243` on 2026-11-02. The branch push, PR, and merge runs were all green on
+the first attempt; see the CI section in `docs/metrics.md` for durations.

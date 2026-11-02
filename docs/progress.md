@@ -4,12 +4,12 @@ Last updated: 2026-11-02
 
 ## Current state
 
-- **Current work package:** WP4 — Parallelism & Reliability.
-- **Status:** implementation complete locally on `wp4/parallelism-reliability`, branched from `main` at `3fffa6f`. The owner chose the self-hosted RealWorld stack. Local verification is green (10/10 four-worker runs, retries disabled); the branch is not pushed and the PR is not opened yet. Per the working agreement, the owner opens and merges PRs.
+- **Current work package:** WP5 implementation complete; the green CI run and intentional-failure evidence are recorded. The owner still needs to open/merge the WP5 PR. WP6 requires explicit approval and a plan before code.
+- **Status:** WP5 is on `wp5/visual-linux-ci` (based on the WP4 docs follow-up commit `96945c9`). Visual tests now render only in `mcr.microsoft.com/playwright:v1.63.0-noble`; Windows baselines were removed. Branch-push CI run [`41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923) is green (2 m 24 s; API 1 m 08 s, Playwright 2 m 14 s, Visual 1 m 50 s); the evidence commit `d85fa39` is green in [`41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061), and the docs follow-up `873e837` is green in [`41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944) (2 m 20 s). The experiment run [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) failed only the Visual job, producing the committed diff evidence.
 - **CI policy:** local stability evidence uses `retries: 0`. CI uses one retry with `on-first-retry` tracing as an infrastructure safety net; failures are recorded honestly and failed jobs are rerun manually, never hidden with sleeps, skips, timeout inflation, or assertion changes.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
-- **Baseline:** WP3 merged to `main` as `3fffa6f` (PR [#4](https://github.com/ifhamm/QA-Assessment/pull/4)); WP2 merged as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
-- **Next work package:** WP5 — visual Linux baselines and CI, after WP4 is merged.
+- **Baseline:** WP4 merged to `main` as `494d243` (PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5)); WP3 merged as `3fffa6f` (PR [#4](https://github.com/ifhamm/QA-Assessment/pull/4)); WP2 merged as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)). WP5 is not merged yet.
+- **Next work package:** WP6 — requires explicit owner approval and a written plan before implementation.
 
 ## Work package tracker
 
@@ -19,8 +19,8 @@ Last updated: 2026-11-02
 | WP1 | Complete, merged | `wp1/fixtures-abstraction-boundaries` / [#2](https://github.com/ifhamm/QA-Assessment/pull/2) | Merged as `e74a82d` on 2026-10-30. Fixtures completed; 3 tests migrated; expected `404` cleanup removed. No assertion changes. |
 | WP2 | Complete, merged | `wp2/reuse-auth-state` / [#3](https://github.com/ifhamm/QA-Assessment/pull/3) | Merged as `90e66ec` on 2026-10-31. API-built storage state, per-test token injection, dashboard in CI, `test:ui` naming. |
 | WP3 | Complete, merged | `wp3/test-data-architecture` / [#4](https://github.com/ifhamm/QA-Assessment/pull/4) | Merged as `3fffa6f` on 2026-11-01. Worker-aware data factories, fixture-owned best-effort cleanup, `--grep` and `--fully-parallel` evidence, found the public API's global token defect. CI: main push green; PR run red (environment). |
-| WP4 | Implementation complete — PR pending | `wp4/parallelism-reliability` | Branched from `3fffa6f`. Self-hosted pinned RealWorld stack, 4 workers with `fullyParallel`, CI-only retry/trace, locator strict-mode fix, 10/10 four-worker runs. Owner must open the PR. |
-| WP5 | Not started | — | Visual Linux baselines and CI. |
+| WP4 | Complete, merged | `wp4/parallelism-reliability` / [#5](https://github.com/ifhamm/QA-Assessment/pull/5) | Merged as `494d243` on 2026-11-02. Self-hosted pinned RealWorld stack, 4 workers with `fullyParallel`, CI-only retry/trace, locator strict-mode fix. CI green on branch push/PR/main; API 1 m 57 s, Playwright 1 m 58 s on `main`. Docs follow-up: [#6](https://github.com/ifhamm/QA-Assessment/pull/6). |
+| WP5 | Implementation complete; PR pending | `wp5/visual-linux-ci` / PR pending | Pinned Playwright container for visual tests, Linux baselines replace Windows, separate CI job, failure artifact. Green branch run [`41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923); intentional failure [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007). Docs: [`decisions/WP5-visual-linux-ci.md`](decisions/WP5-visual-linux-ci.md). |
 | WP6 | Not started | — | Requires explicit approval; plan required before code. |
 | WP7 | Not started | — | — |
 | WP8 | Not started | — | Optional/stretch. |
@@ -65,7 +65,19 @@ Last updated: 2026-11-02
 - [`docs/pr/WP4-parallelism-reliability.md`](pr/WP4-parallelism-reliability.md) — PR description.
 - [`docs/metrics.md`](metrics.md) — WP4 before/after, 1/2/4-worker benchmark, 10-run table, repeat probe, and API identity probe.
 - Local: `npm run typecheck` exit 0; `npm run test:local` 9/9 at 4 workers; 10/10 consecutive 4-worker runs with retries disabled; UI `--repeat-each=10` 41/41 in 37.2 s; local API identity probe 0/6 mismatches; `npm run test:api:local` 15 requests / 53 assertions, 0 failed.
-- CI: workflow now builds the self-hosted stack in both jobs and no longer reads repository variables. PR evidence is pending the owner-opened PR; no CI result is claimed yet.
+- CI: PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5) merged as `494d243`; branch push, PR, and `main` runs all green on the first attempt (API 1 m 57 s, Playwright 1 m 58 s on `main`). The workflow builds the self-hosted stack in both jobs and no longer reads repository variables.
+
+### WP5
+
+- [`docs/decisions/WP5-visual-linux-ci.md`](decisions/WP5-visual-linux-ci.md) — instability sources, options, container decision, baseline rules, trade-offs, and evidence.
+- [`docs/metrics.md`](metrics.md) — WP5 before/after table, local evidence (7 host + 2 visual, repeat probe 10/10), and CI runs.
+- [`.github/workflows/tests.yml`](../.github/workflows/tests.yml) — separate `Visual Tests` job; `visual-diffs` artifact on failure.
+- [`docker-compose.yml`](../docker-compose.yml) — `visual` profile in `mcr.microsoft.com/playwright:v1.63.0-noble`, reaching the app as `http://web`.
+- [`playwright.config.ts`](../playwright.config.ts) — `visual` project, fixed light/UTC/en-US rendering, explicit disabled animations; thresholds unchanged.
+- [`tests/visual/`](../tests/visual) — `*-visual-linux.png` baselines; Windows baselines removed.
+- Green CI: [run `41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923) on `7045feb` (2 m 24 s; API 1 m 08 s, Playwright 2 m 14 s, Visual 1 m 50 s; `2 passed (1.9s)`, no retry).
+- Intentional failure: [run `41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) on experiment commit `7254cb3`; only `Visual Tests` failed (1 m 49 s), and the `visual-diffs` artifact contained expected/actual/diff images.
+- Committed evidence: [`wp5-intentional-failure-diff.png`](evidence/wp5-intentional-failure-diff.png) and [`wp5-intentional-failure-actual.png`](evidence/wp5-intentional-failure-actual.png).
 
 ## Baseline summary
 
@@ -115,11 +127,21 @@ Last updated: 2026-11-02
 - Fixed a strict-mode locator bug in `NavBar` (scoped to `navigation`; username also exists as an article author link). Updated dashboard and visual editor tests to use `NavBar` helpers.
 - Enabled `fullyParallel: true`, `workers: 4`, `retries: 0` locally, `1` in CI with `trace: "on-first-retry"`. CI now builds the stack in both jobs and no longer uses repository variables.
 - Local evidence: typecheck passes; 20/20 four-worker runs green across two independent 10-run batches (no retries); UI `--repeat-each=10` 41/41 (37.2 s warm; 1.0 min after Docker restart); local API identity probe 0/6 mismatches; Newman 15/53, 0 failed; `waitForTimeout` 0 in Playwright code.
-- Branch `wp4/parallelism-reliability` is ready; PR is not opened (owner must open it). No merges performed.
+- PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5) merged as `494d243` on 2026-11-02. CI was green on the first attempt on the branch push ([`41462038159`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462038159), 1 m 49 s), the PR ([`41462371220`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462371220), 2 m 04 s), and `main` ([`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575), 2 m 04 s: API 1 m 57 s, Playwright 1 m 58 s). No retry was consumed. PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5) now carries the WP4 title and description; the docs follow-up is PR [#6](https://github.com/ifhamm/QA-Assessment/pull/6).
+
+## WP5 summary
+
+- Visual tests now render only in `mcr.microsoft.com/playwright:v1.63.0-noble`, the same image that created the baselines. The compose `visual` service joins the stack network and reaches the app at `http://web`; no host ports or host fonts are involved.
+- The old `*-chromium-win32.png` baselines were deleted and replaced by `*-visual-linux.png`. Keeping both would create two sources of truth; a Windows-only green would no longer imply CI green.
+- The `visual` Playwright project is separate from `setup`/`authenticated`/`chromium`. `npm test` and `npm run test:local` run the 7 host tests; `npm run test:visual` runs the 2 container-rendered tests. `test:visual:linux:update` regenerates baselines in the same image.
+- Screenshot inputs are fixed: 1280x720 viewport, light color scheme, UTC, `en-US`, explicitly disabled animations, and a width-stabilized/masked username on the editor page. Diff thresholds remain the Playwright defaults and were not loosened.
+- CI has a separate `Visual Tests` job. On failure it uploads `test-results/` and `playwright-report/` as `visual-diffs`, containing expected, actual, and diff images.
+- Local evidence: typecheck exit 0; 7/7 host tests (19.6 s); 2/2 visual tests (7.4 s); `--repeat-each=5` 10/10 (23.4 s).
+- CI evidence: branch run [`41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923) green in 2 m 24 s with no retry. Experiment run [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) failed only the Visual job and uploaded a visible diff; the images are committed under `docs/evidence/`.
 
 ## Blockers / decisions needed
 
-1. **WP3 PR description is empty.** The PR is merged, but [#4](https://github.com/ifhamm/QA-Assessment/pull/4) has no description. Paste `docs/pr/WP3-test-data-architecture.md` into it (and retitle it `WP3: Test Data Architecture`) in the GitHub UI so the merge history satisfies the DoD.
-2. **WP4 PR needs to be opened.** The owner must open PR `wp4/parallelism-reliability` to `main`; paste `docs/pr/WP4-parallelism-reliability.md`. CI will run against the self-hosted stack; evidence will be recorded after the run.
-3. **WP5 scope.** Confirm Linux visual baselines and CI integration.
-4. **CI policy (resolved for WP1–WP4).** Accept environment-dependent failures and rerun failed jobs manually. Local stability is proven without retries; CI has a single retry with first-retry tracing.
+1. **WP3 PR description is empty.** The PR is merged, but [#4](https://github.com/ifhamm/QA-Assessment/pull/4) has no description and its title is the default `Wp3/test data architecture`. Paste `docs/pr/WP3-test-data-architecture.md` into the merged PR (and retitle it `WP3: Test Data Architecture`) in the GitHub UI so the merge history satisfies the DoD.
+2. **WP5 PR and docs follow-up.** Open the WP5 PR from `wp5/visual-linux-ci` with `docs/pr/WP5-visual-linux-ci.md`. Merge the WP4 docs follow-up [#6](https://github.com/ifhamm/QA-Assessment/pull/6) first or close it as superseded; the WP5 branch already contains its commit `96945c9`. The experiment branch was deleted and must not be merged.
+3. **WP6 scope and approval.** WP6 (staged CI pipeline and sharding) requires explicit owner approval and a written plan before any code.
+4. **CI policy (resolved for WP1–WP5).** Accept environment-dependent failures and rerun failed jobs manually. Local stability is proven without retries; CI has a single retry with first-retry tracing. WP5's visual job passed without consuming the retry.

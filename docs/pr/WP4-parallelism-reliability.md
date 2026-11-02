@@ -128,11 +128,16 @@ total **20/20 green**. Absolute times vary with Docker/host load.
 
 ## CI status
 
-CI has not run on this branch yet. The owner opens PRs through the GitHub UI, so
-the first WP4 run will happen after this description is attached to the PR. The
-workflow is written to build the self-hosted stack in both jobs; the PR run
-result should be recorded in `docs/metrics.md` and `docs/progress.md` rather than
-assumed.
+Green on the first attempt on the branch push, the PR, and `main`:
+
+| Run | Event | Commit | Conclusion | Wall |
+| --- | --- | --- | --- | ---: |
+| [`41462038159`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462038159) | push (branch) | `3931d12` | success | 1 m 49 s |
+| [`41462371220`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462371220) | pull_request | `3931d12` | success | 2 m 04 s |
+| [`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575) | push (`main`) | `494d243` | success | 2 m 04 s |
+
+On `main`, the API job took 1 m 57 s and the Playwright job 1 m 58 s; stack
+startup is the dominant cost. The HTML report is attached to run `41462400575`.
 
 ## Rule checklist
 
