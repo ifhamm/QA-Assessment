@@ -9,7 +9,11 @@
     "test:ui:functional": "playwright test tests/ui/ui-functional.spec.ts",
     "test:cross": "playwright test tests/cross-layer/cross-layer.spec.ts",
     "test:api": "newman run postman/conduit.postman_collection.json --env-var baseUrl=https://api.realworld.show",
+    "test:api:local": "newman run postman/conduit.postman_collection.json --env-var baseUrl=http://localhost:3000",
     "test:visual": "playwright test tests/visual",
+    "stack:up": "docker compose up -d --build --wait",
+    "stack:down": "docker compose down -v --remove-orphans",
+    "test:local": "cross-env BASE_URL=http://localhost:8081 API_BASE_URL=http://localhost:8081/api AUTH_EMAIL= AUTH_PASSWORD= playwright test",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -19,6 +23,7 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.5.0",
+    "cross-env": "^10.1.0",
     "newman": "^6.2.2",
     "typescript": "^7.0.2"
   },

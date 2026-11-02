@@ -101,40 +101,22 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`38359351107`](https://github.com/ifhamm/QA-Assessment/actions/runs/38359351107) |
-| Commit | `c5ec4f2` |
+| Run | [`41305646205`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) |
+| Commit | `3fffa6f` (WP3 merge) |
 | Event | push |
-| Conclusion | **failure** |
-| Overall wall | 39 s |
-| API job | success, 16 s |
-| Playwright job | failure, 35 s |
+| Conclusion | **success** |
+| Overall wall | 56 s |
+| API job | success, 14 s |
+| Playwright job | success, 52 s |
 | Typecheck step | success |
-| UI tests step | failure at `setup` |
-| Cross-layer step | skipped |
+| UI tests step | success |
+| Cross-layer step | success |
 | HTML report artifact | uploaded |
 
-Failure:
+The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
-```text
-Error: AUTH_EMAIL and AUTH_PASSWORD must be set for the authentication setup.
-  at tests/auth.setup.ts:13:11
-1 failed
-  [setup] > tests/auth.setup.ts:8:6 > authenticate via API
-3 did not run
-```
-
-The workflow provides `BASE_URL` and `API_BASE_URL` only. The setup project does not use its fallback when the auth variables are absent because it throws first.
-
-### Last green run
-
-| Item | Value |
-| --- | --- |
-| Run | [`38228308979`](https://github.com/ifhamm/QA-Assessment/actions/runs/38228308979) |
-| Commit | `18028dd` (before `auth.setup.ts`) |
-| Conclusion | success |
-| API job | 14 s |
-| Playwright job | 59 s |
-| Overall wall | 61,981 s (queued for many hours) |
+The latest green run is the WP3 merge run above. WP4 CI evidence will replace it
+once the owner opens the PR.
 
 ### What runs in CI
 
@@ -149,9 +131,10 @@ The workflow provides `BASE_URL` and `API_BASE_URL` only. The setup project does
 | k6 (1 scenario) | **No** |
 | Merged report | No; HTML artifact only |
 | JUnit / job summary | No |
-| Trace artifact | Trace retained on failure inside the HTML report artifact |
+| Trace artifact | CI traces on the first retry, inside the HTML report artifact |
 
-Tests excluded from CI: dashboard, visual, and k6. In the latest run, the UI functional and cross-layer tests also did not execute because the setup project failed.
+Tests excluded from CI: visual and k6. The dashboard is included through
+`test:ui`. The WP4 workflow also starts the self-hosted stack in both jobs.
 
 ## WP0 post-audit CI unblock (2026-10-29)
 
@@ -325,7 +308,115 @@ Conclusion: the backend effectively keeps one valid identity at a time. Any test
 | `npm run test:api` | 15 requests / 53 assertions, 0 failed (6.2 s) |
 | Snapshots | Unchanged; no `--update-snapshots` used |
 
-CI evidence pending the PR run. WP4 owns raising the worker default and consolidating the public-API reliability work.
+### CI after merge
+
+| Run | Event | API job | Playwright job | Result |
+| --- | --- | --- | --- | --- |
+| [`41305629458`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305629458) | pull_request | fail (10 s) | fail (58 s): UI passed, cross-layer failed | PR run red; consistent with the public-environment behavior, recorded as-is |
+| [`41305646205`](https://github.com/ifhamm/QA-Assessment/actions/runs/41305646205) | push (`main`, `3fffa6f`) | pass (14 s) | pass (52 s) | **green**, both jobs; overall 56 s |
+
+The PR run is the evidence the handover asked for, and it is red. It is not hidden: the same commit tree passed both jobs on the merged `main` push run moments later, which points to the environment rather than the diff. No retry was added to make it green. WP4 owns consolidating this reliability work.
+
+## WP4 — Parallelism & Reliability (2026-11-02)
+
+Branch `wp4/parallelism-reliability`, base `main` at `3fffa6f` (WP3 merge). Local
+runs: Windows 11, Node 24.13.0, Playwright 1.63.0, Docker Desktop with Compose
+v2. The target is the pinned self-hosted stack described in
+[`docs/decisions/WP4-parallelism-reliability.md`](decisions/WP4-parallelism-reliability.md).
+
+### Before / after
+
+| Metric | Before (WP3) | After WP4 |
+| --- | --- | --- |
+| Test target | Shared public demo/API | Self-hosted pinned Angular + Nitro stack |
+| `fullyParallel` | `false` | **`true`** |
+| Workers | `1` | **`4`** |
+| Retries | `0` | `0` locally; `1` in CI |
+| Trace | `retain-on-failure` | Local `retain-on-failure`; CI `on-first-retry` |
+| Full suite at 4 workers | 7/9 and 8/9 (public identity defect) | **20/20 runs green across two batches, 9/9 tests each** |
+| 4-worker full-suite Playwright time | n/a (runs failed) | 7.0–7.9 s warm; 13.5–17.3 s after Docker restart |
+| UI `--repeat-each=10` | 41/41, 5.2 min | **41/41, 37.2 s warm; 1.0 min after restart** |
+| Concurrent registration identity probe | 5/6 mismatches (public) | **0/6 mismatches** (local) |
+| `waitForTimeout` in Playwright code | 0 | **0** (unchanged) |
+| API suite target | Public API | Local API, 15 requests / 53 assertions, 0 failed |
+
+### Worker benchmark
+
+Two rounds after the stack was warm; full suite, `fullyParallel: true`. Wall time
+includes Node and browser startup; the Playwright value is the reporter's test
+time.
+
+| Workers | Wall round 1 | Playwright round 1 | Wall round 2 | Playwright round 2 |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 15.4 s | 12.7 s | 13.9 s | 11.7 s |
+| 2 | 9.1 s | 7.0 s | 9.5 s | 7.4 s |
+| 4 | 9.0 s | 6.9 s | 9.0 s | 6.9 s |
+
+The suite is small, so fixed setup/browser cost dominates the wall time. On test
+time, four workers roughly halve the one-worker duration.
+
+### 10 consecutive 4-worker runs (retries disabled)
+
+All 10 runs exited 0 with 9/9 tests. `CI` was unset, so the config used
+`retries: 0`.
+
+| Run | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Wall (s) | 9.8 | 10.0 | 9.4 | 9.4 | 9.2 | 9.8 | 10.7 | 9.2 | 10.0 | 10.3 |
+| Playwright (s) | 7.5 | 7.7 | 7.3 | 7.2 | 7.1 | 7.7 | 7.9 | 7.0 | 7.8 | 7.7 |
+| Passed | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 | 9 |
+
+A second independent batch after Docker Desktop restarted (same code, fresh
+containers) also passed **10/10**: wall 16.8–22.9 s, Playwright 13.5–17.3 s.
+Absolute times vary with Docker/host load; both batches used `retries: 0`.
+Total across both batches: **20/20 green**.
+
+### Repeat probe
+
+`npx playwright test tests/ui --repeat-each=10 --workers=4`:
+**41/41 passed** in 37.2 s (39.6 s wall). A second probe after the Docker restart
+also passed 41/41 in 1.0 min. The WP3 one-worker equivalent took 5.2 min.
+
+### Local API identity probe
+
+6 concurrent registrations, each followed by `GET /user` with its own token:
+**0/6 mismatches**. The public API probe on 2026-11-01 was 5/6 mismatches, and
+WP3 recorded 6/8 mismatches for an 8-registration probe. This is the defect the
+self-hosted target removes.
+
+### Locator audit and flake found
+
+The first 4-worker run exposed a strict-mode violation: `NavBar` searched the
+whole page for the username link, which also matched the article author link on
+article pages. The dashboard and visual editor tests had the same unscoped
+pattern. `NavBar` now scopes every query to the `navigation` landmark and exposes
+shared link helpers; the dashboard and visual tests use them. This was a
+root-cause locator fix, not a retry, sleep, timeout increase, or assertion
+change.
+
+`waitForTimeout` count in Playwright code: **0**. The only `sleep(1)` in the
+repository is k6 load-test pacing, not a UI wait.
+
+### Verification
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | exit 0 |
+| `npx playwright test --list` | 9 tests in 6 files |
+| `npm run test:local` | 9 passed (4 workers) |
+| 10 × 4-worker runs (batch 1) | **10/10 green**, 9/9 each |
+| 10 × 4-worker runs (batch 2, after Docker restart) | **10/10 green**, 9/9 each |
+| `npx playwright test tests/ui --repeat-each=10 --workers=4` | 41/41 passed (37.2 s warm; 1.0 min after restart) |
+| `npm run test:api:local` | 15 requests / 53 assertions, 0 failed |
+| `waitForTimeout` in Playwright code | 0 |
+
+### CI
+
+The WP4 workflow builds the self-hosted stack in both jobs and no longer reads
+`BASE_URL`, `API_BASE_URL`, `AUTH_EMAIL`, or `AUTH_PASSWORD` from repository
+variables. Local retries are 0; CI uses one retry with `on-first-retry` tracing.
+CI evidence is pending the owner-opened PR; it will be recorded here after the
+run. The local 10-run evidence above is retry-free and is the stability claim.
 
 ## Reporting quality
 
@@ -333,8 +424,10 @@ CI evidence pending the PR run. WP4 owns raising the worker default and consolid
 | --- | --- |
 | Reporters | `html` only |
 | Local HTML | `playwright-report/index.html` |
-| Trace | `retain-on-failure` |
+| Trace | Local `retain-on-failure`; CI `on-first-retry` |
 | Screenshot | `only-on-failure` |
+| Retries | 0 locally; 1 in CI |
+| Workers | 4, `fullyParallel: true` |
 | Video | No |
 | JUnit / JSON | No |
 | Job summary | No |
@@ -349,7 +442,10 @@ CI evidence pending the PR run. WP4 owns raising the worker default and consolid
 | Typecheck | `npm run typecheck` | Pass (exit 0) |
 | Test discovery | `npx playwright test --list` | 9 tests in 6 files |
 | Default test script | `npm test` | Present (`playwright test`) |
-| API script | `npm run test:api` | Present |
+| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env |
+| API script | `npm run test:api` | Present (public demo) |
+| Local API script | `npm run test:api:local` | Present (self-hosted `localhost:3000`) |
+| Stack scripts | `npm run stack:up`, `npm run stack:down` | Present; `down` removes the disposable SQLite data |
 | UI script | `npm run test:ui` | Present; runs `tests/ui` (functional + dashboard). `test:ui:functional` runs functional only. |
 | Cross-layer script | `npm run test:cross` | Present |
 | Visual script | `npm run test:visual` | Present |
@@ -359,4 +455,5 @@ CI evidence pending the PR run. WP4 owns raising the worker default and consolid
 ## Reference
 
 - Detailed findings: [`docs/audit.md`](audit.md)
-- Decision note: [`docs/decisions/WP0-baseline-audit.md`](decisions/WP0-baseline-audit.md)
+- WP0 decision note: [`docs/decisions/WP0-baseline-audit.md`](decisions/WP0-baseline-audit.md)
+- WP4 decision note: [`docs/decisions/WP4-parallelism-reliability.md`](decisions/WP4-parallelism-reliability.md)
