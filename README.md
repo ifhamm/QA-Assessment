@@ -306,11 +306,11 @@ variables:
 - Playwright installs Chromium and uploads the HTML report as an artifact,
   retained for 7 days.
 
-Latest recorded green run (WP5 branch, commit `7045feb`, not merged yet):
+Latest recorded green run (WP5 branch, commit `d85fa39`, not merged yet):
 
-[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923)
+[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061)
 
-The run was green in 2 m 24 s: API 1 m 08 s, Playwright 2 m 14 s, Visual
+The run was green in 2 m 24 s: API 1 m 40 s, Playwright 2 m 20 s, Visual
 1 m 50 s. The workflow uses one CI retry with `on-first-retry` tracing; local
 stability evidence remains retry-free and this run consumed no retry.
 

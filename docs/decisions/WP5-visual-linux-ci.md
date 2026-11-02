@@ -139,6 +139,8 @@ produce a visible diff.
 - Green branch push: [run `41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923)
   on `7045feb` (2 m 24 s). Visual job 1 m 50 s, `2 passed (1.9s)`, no retry;
   Playwright job 2 m 14 s, 5 + 3 passed, no retry; API job 1 m 08 s.
+- Final docs commit `d85fa39`: [run `41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061)
+  green as well (2 m 24 s; Visual 1 m 50 s), so the evidence commit is covered.
 - Intentional failure: [run `41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007)
   on experiment commit `7254cb3`. Only `Visual Tests` failed (1 m 49 s); the
   other two jobs passed. Artifact `visual-diffs` (1.2 MB) contained the

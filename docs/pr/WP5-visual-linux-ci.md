@@ -105,6 +105,10 @@ on `7045feb`, push, **success** in 2 m 24 s:
 | Playwright Tests | 2 m 14 s | success; 5 + 3 passed, no retry |
 | Visual Tests | 1 m 50 s | success; 2 passed (1.9 s), no retry |
 
+The final docs commit `d85fa39` was green again in
+[run `41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061)
+(2 m 24 s: API 1 m 40 s, Playwright 2 m 20 s, Visual 1 m 50 s).
+
 ### Intentional failure
 
 [Run `41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007)
