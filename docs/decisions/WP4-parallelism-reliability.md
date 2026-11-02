@@ -206,13 +206,15 @@ npm run test:local
 npm run test:api:local
 
 # 10 consecutive 4-worker runs with retries disabled.
+# Use the test:local wrapper: it injects BASE_URL/API_BASE_URL for the local
+# stack, while a bare `npx playwright test` would follow .env (the public demo).
 foreach ($run in 1..10) {
-  npx playwright test --workers=4 --reporter=line
+  npm run test:local -- --workers=4 --reporter=line
   if ($LASTEXITCODE -ne 0) { throw "run $run failed" }
 }
 
 # UI repeat probe.
-npx playwright test tests/ui --repeat-each=10 --workers=4 --reporter=line
+npm run test:local -- tests/ui --repeat-each=10 --workers=4 --reporter=line
 
 # Stop and remove the disposable database.
 npm run stack:down

@@ -156,7 +156,7 @@ npm run stack:up
 npm run typecheck
 npm run test:local
 npm run test:api:local
-npx playwright test --workers=4 --reporter=line
+npm run test:local -- --workers=4 --reporter=line
 npm run stack:down
 ```
 
