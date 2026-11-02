@@ -1,0 +1,28 @@
+diff --git a/server/routes/api/articles/[slug]/index.put.ts b/server/routes/api/articles/[slug]/index.put.ts
+index b6af6ec..2079d1b 100644
+--- a/server/routes/api/articles/[slug]/index.put.ts
++++ b/server/routes/api/articles/[slug]/index.put.ts
+@@ -7,7 +7,6 @@ import {validateBody} from '~/utils/validate';
+ import {handleUniqueConstraintError} from '~/utils/prisma-errors';
+ 
+ export default definePrivateEventHandler(async (event, {auth}) => {
+-    const {article} = validateBody(updateArticleSchema, await readBody(event));
+     const slug = getRouterParam(event, 'slug');
+ 
+     const existingArticle = await usePrisma().article.findFirst({
+@@ -28,10 +27,14 @@ export default definePrivateEventHandler(async (event, {auth}) => {
+         throw new HttpException(404, {errors: {article: ['not found']}});
+     }
+ 
++    // Match the target API's contract: ownership is checked before body
++    // validation, and a non-owner sees the article as not found.
+     if (existingArticle.author.id !== auth.id) {
+-        throw new HttpException(403, {errors: {article: ['forbidden']}});
++        throw new HttpException(404, {errors: {article: ['not found']}});
+     }
+ 
++    const {article} = validateBody(updateArticleSchema, await readBody(event));
++
+     const newSlug = article.title ? `${slugify(article.title)}-${crypto.randomUUID().slice(0, 8)}` : null;
+ 
+     const hasTagList = Array.isArray(article.tagList);
