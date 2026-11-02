@@ -40,3 +40,27 @@ services:
       timeout: 3s
       retries: 20
       start_period: 5s
+
+  # The only environment allowed to produce or compare visual baselines.
+  # The image tag must match the @playwright/test version in package-lock.json;
+  # tests reach the app through the compose network, not through localhost.
+  visual:
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    profiles: ["visual"]
+    depends_on:
+      web:
+        condition: service_healthy
+    working_dir: /work
+    volumes:
+      - .:/work
+    environment:
+      BASE_URL: http://web
+      API_BASE_URL: http://web/api
+      TZ: UTC
+    command:
+      [
+        "node",
+        "node_modules/@playwright/test/cli.js",
+        "test",
+        "--project=visual",
+      ]

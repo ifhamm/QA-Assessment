@@ -84,3 +84,44 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  visual-tests:
+    name: Visual Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start self-hosted RealWorld stack
+        run: npm run stack:up
+
+      # Runs in mcr.microsoft.com/playwright, the same image used to create the
+      # baselines. The host runner never renders the screenshots.
+      - name: Run visual tests
+        run: npm run test:visual:linux
+
+      - name: Upload visual diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop stack
+        if: always()
+        run: docker compose --profile visual down -v --remove-orphans
