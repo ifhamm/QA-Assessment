@@ -136,6 +136,11 @@ produce a visible diff.
 
 ## Evidence
 
+- Merged to `main` as `068f56a` via PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7).
+  PR run [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058)
+  was green in 1 m 51 s; post-merge `main` run
+  [`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183)
+  was green in 2 m 09 s (Visual 1 m 49 s).
 - Green branch push: [run `41466040923`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466040923)
   on `7045feb` (2 m 24 s). Visual job 1 m 50 s, `2 passed (1.9s)`, no retry;
   Playwright job 2 m 14 s, 5 + 3 passed, no retry; API job 1 m 08 s.

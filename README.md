@@ -306,16 +306,14 @@ variables:
 - Playwright installs Chromium and uploads the HTML report as an artifact,
   retained for 7 days.
 
-Green run covering the WP5 implementation (branch commit `d85fa39`):
+WP5 merged to `main` as `068f56a` (PR
+[#7](https://github.com/ifhamm/QA-Assessment/pull/7)) on 2026-11-02.
 
-[QA Automation Tests - Success](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061)
-
-The run was green in 2 m 24 s: API 1 m 40 s, Playwright 2 m 20 s, Visual
-1 m 50 s. The docs-only follow-up commit `873e837` passed again in
-[run `41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944)
-(2 m 20 s: API 1 m 09 s, Playwright 2 m 16 s, Visual 1 m 46 s). The workflow
-uses one CI retry with `on-first-retry` tracing; local stability evidence
-remains retry-free and these runs consumed no retry.
+Green `main` run [41469719183](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183)
+in 2 m 09 s: API 1 m 14 s, Playwright 1 m 55 s, Visual 1 m 49 s. The PR run
+[`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058)
+was also green (1 m 51 s). The workflow uses one CI retry with
+`on-first-retry` tracing; local stability evidence remains retry-free.
 
 ## Additional Coverage
 
