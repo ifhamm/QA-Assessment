@@ -15,7 +15,7 @@
     "test:visual": "npm run test:visual:linux",
     "test:visual:linux": "docker compose --profile visual run --rm visual",
     "test:visual:linux:update": "docker compose --profile visual run --rm visual node node_modules/@playwright/test/cli.js test --project=visual --update-snapshots",
-    "report:merge": "playwright merge-reports --reporter=html,list",
+    "report:merge": "playwright merge-reports -c playwright.merge.config.ts --reporter=html,list",
     "stack:up": "docker compose up -d --build --wait",
     "stack:down": "docker compose down -v --remove-orphans",
     "test:local": "cross-env BASE_URL=http://localhost:8081 API_BASE_URL=http://localhost:8081/api AUTH_EMAIL= AUTH_PASSWORD= playwright test --project=setup --project=authenticated --project=chromium",

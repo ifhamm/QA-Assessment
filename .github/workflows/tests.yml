@@ -310,7 +310,7 @@ jobs:
 
       - name: Merge reports
         if: ${{ hashFiles('merged-blobs/*.zip') != '' }}
-        run: npx playwright merge-reports --reporter=html,list merged-blobs
+        run: npx playwright merge-reports -c playwright.merge.config.ts --reporter=html,list merged-blobs
 
       - name: Verify merged report
         run: test -f playwright-report/index.html
