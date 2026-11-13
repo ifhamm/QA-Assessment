@@ -193,10 +193,17 @@ Expected: 7 host tests pass, 2 visual tests pass, and the repeat probe passes
 10/10. The CI `Visual Tests` job is green, and the experiment run above shows
 the intentional red render failing with a diff.
 
+## Result
+
+Merged to `main` as `068f56a` via PR
+[#7](https://github.com/ifhamm/QA-Assessment/pull/7) on 2026-11-02. The WP4 docs
+follow-up [#6](https://github.com/ifhamm/QA-Assessment/pull/6) merged first.
+PR run [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058)
+was green in 1 m 51 s; post-merge `main` run
+[`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183)
+was green in 2 m 09 s.
+
 ## Open questions
 
-1. PR [#6](https://github.com/ifhamm/QA-Assessment/pull/6) contains the WP4 docs
-   follow-up, which this branch already includes as commit `96945c9`. Merge #6
-   first or close it as superseded so the history is not duplicated.
-2. Should a later work package vendor the Google Fonts/Ionicons assets to remove
+1. Should a later work package vendor the Google Fonts/Ionicons assets to remove
    the last external dependency from the visual render?

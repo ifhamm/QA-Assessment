@@ -473,13 +473,17 @@ the `@playwright/test` `1.63.0` in `package-lock.json`.
 | [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) | push (experiment) | `7254cb3` | failure (expected) | 2 m 42 s | 1 m 08 s | 2 m 42 s | 1 m 49 s |
 | [`41467922061`](https://github.com/ifhamm/QA-Assessment/actions/runs/41467922061) | push (branch, final) | `d85fa39` | success | 2 m 24 s | 1 m 40 s | 2 m 20 s | 1 m 50 s |
 | [`41468501944`](https://github.com/ifhamm/QA-Assessment/actions/runs/41468501944) | push (branch, docs) | `873e837` | success | 2 m 20 s | 1 m 09 s | 2 m 16 s | 1 m 46 s |
+| [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058) | pull_request | `984cd61` | success | 1 m 51 s | 1 m 22 s | 1 m 45 s | 1 m 47 s |
+| [`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) | push (`main`) | `068f56a` | success | 2 m 09 s | 1 m 14 s | 1 m 55 s | 1 m 49 s |
 
 The first run is the WP5 acceptance run: the `Visual Tests` job logged
 `2 passed (1.9s)` inside the Playwright image, and the Playwright job logged
 `5 passed` + `3 passed` with no `Retry #` line. The API job was green as well.
 The final docs-only commit `d85fa39` was green again with the same three jobs
 (Visual 1 m 50 s), so the evidence commit itself is covered. The subsequent
-docs-only commit `873e837` was also green (Visual 1 m 46 s).
+docs-only commit `873e837` was also green (Visual 1 m 46 s). WP5 merged as
+`068f56a` via PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7); the PR
+and post-merge `main` runs are both green.
 
 The experiment run is the intentional-failure proof. Only the `Visual Tests`
 job failed; API and Playwright stayed green. The job uploaded the
@@ -509,7 +513,7 @@ artifact was captured; the run link above remains the durable evidence.
 | Video | No |
 | JUnit / JSON | No |
 | Job summary | No |
-| CI artifact | `playwright-report`, 7-day retention |
+| CI artifact | `playwright-report`, 7-day retention; `visual-diffs` on visual failure |
 
 **Qualitative:** better than a bare console. A failure leaves an HTML report, screenshot, error context, and (on failure) a trace. There is no merged report, no JUnit output, no job summary, and no direct link from a CI summary to a trace. Triage still requires opening the artifact manually.
 
