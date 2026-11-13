@@ -299,16 +299,21 @@ jobs:
       - name: Flatten blob reports
         run: |
           mkdir -p merged-blobs
-          find all-blob-reports -name 'report.zip' -print0 2>/dev/null |
+          i=0
+          find all-blob-reports -name '*.zip' -print0 2>/dev/null |
             while IFS= read -r -d '' file; do
-              shard=$(basename "$(dirname "$file")")
-              cp "$file" "merged-blobs/$shard.zip"
+              i=$((i + 1))
+              artifact=$(basename "$(dirname "$file")")
+              cp "$file" "merged-blobs/$artifact-$i.zip"
             done
           ls -l merged-blobs
 
       - name: Merge reports
         if: ${{ hashFiles('merged-blobs/*.zip') != '' }}
         run: npx playwright merge-reports --reporter=html,list merged-blobs
+
+      - name: Verify merged report
+        run: test -f playwright-report/index.html
 
       - name: Upload merged report
         if: always()
