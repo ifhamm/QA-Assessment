@@ -543,6 +543,15 @@ wall, 14.0–14.6 s Playwright, 4 passed. Visual: 2 passed in 3.3 s.
 | Staged, 1 shard | [`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236) | 3 m 17 s | 8.7 | 203 KB |
 | Staged, 3 shards | [`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291) | 3 m 07 s | 12.1 | Yes |
 
+Wall time includes hosted-runner queueing and varies between otherwise identical
+runs: the final docs-only run
+[`43437504829`](https://github.com/ifhamm/QA-Assessment/actions/runs/43437504829)
+waited 160 s before its first job started, so its end-to-end wall was 5 m 23 s
+while its job durations summed to 7.5 runner-minutes. Use job durations and
+runner-minutes for comparisons; the evidence runs above had 3–4 s of queue
+before their first job. The final run still produced the 203 KB merged report
+and all jobs were green.
+
 The 3-shard run came from a temporary commit that defaulted the matrix to
 three shards and was reverted immediately. Intermediate run
 [`43434297464`](https://github.com/ifhamm/QA-Assessment/actions/runs/43434297464)

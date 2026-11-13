@@ -181,6 +181,12 @@ matrix to three shards; it was reverted immediately afterwards. The run is
 kept as evidence, and the merged report contains all five blobs (smoke, three
 regression shards, visual).
 
+Wall time includes runner queueing: the cited runs queued for 3–4 s before
+their first job, while the final docs-only run (`43437504829`) queued for
+160 s and still finished green with a merged report. Runner-minutes and job
+durations are the stable comparison; the conclusion below is based on the
+queue-free evidence runs.
+
 **Honest conclusion:** for a 7-test suite, sharding is not worth it. Three
 shards saved 10 s of wall time versus one shard but cost 3.4 extra
 runner-minutes, because each shard repeats the Playwright install and the
