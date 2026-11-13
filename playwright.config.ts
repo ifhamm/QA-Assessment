@@ -6,6 +6,9 @@ dotenv.config();
 
 const authFile = path.resolve("playwright/.auth/user.json");
 const isCI = Boolean(process.env.CI);
+// Set by the CI workflow for runs whose result should join the merged report.
+// Local runs keep the HTML reporter and continue to write playwright-report/.
+const blobOutputDir = process.env.PLAYWRIGHT_BLOB_OUTPUT_DIR;
 
 export default defineConfig({
   testDir: "./tests",
@@ -17,7 +20,9 @@ export default defineConfig({
   // 10-run stability probe cannot hide flakiness.
   retries: isCI ? 1 : 0,
   workers: 4,
-  reporter: "html",
+  reporter: blobOutputDir
+    ? [["blob", { outputDir: blobOutputDir }], ["line"]]
+    : "html",
   // Visual tests run only in the pinned Playwright container, so the image
   // below is the single rendering environment. These options keep the intent
   // explicit; the diff thresholds are the Playwright defaults and are not

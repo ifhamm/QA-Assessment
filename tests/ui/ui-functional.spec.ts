@@ -6,7 +6,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe("UI Functional Tests", () => {
   // ─── Test 1: Successful login → create article workflow ─────────────
-  test("login and create a new article", async ({
+  test("login and create a new article @smoke", async ({
     page,
     api,
     loginPage,
@@ -62,7 +62,7 @@ test.describe("UI Functional Tests", () => {
   });
 
   // ─── Test 2: Invalid login ─────────────────────────────────────────
-  test("shows error on invalid credentials", async ({ page, loginPage }) => {
+  test("shows error on invalid credentials @regression", async ({ page, loginPage }) => {
     const testUser = syntheticUser(test.info().workerIndex);
 
     await loginPage.goto();
@@ -79,7 +79,7 @@ test.describe("UI Functional Tests", () => {
     test.use({ storageState: { cookies: [], origins: [] } });
 
     // ─── Test 3: Unauthenticated access to editor ──────────────────────
-    test("redirects unauthenticated user away from editor", async ({ page }) => {
+    test("redirects unauthenticated user away from editor @regression", async ({ page }) => {
       // Attempt unauthenticated access.
       await page.goto("/editor");
 

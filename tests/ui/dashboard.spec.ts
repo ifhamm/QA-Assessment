@@ -1,6 +1,6 @@
 import { test, expect } from "../../fixtures/test-base";
 
-test("opens the dashboard as an authenticated user", async ({
+test("opens the dashboard as an authenticated user @smoke", async ({
   page,
   navBar,
 }) => {

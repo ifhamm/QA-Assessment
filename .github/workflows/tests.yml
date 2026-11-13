@@ -3,6 +3,13 @@ name: QA Automation Tests
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: "UI regression shards (1 keeps a single job)"
+        required: false
+        type: number
+        default: 1
 
 env:
   # The workflow target is the self-hosted stack, not the shared public demo.
@@ -11,9 +18,43 @@ env:
   BASE_URL: http://localhost:8081
   API_BASE_URL: http://localhost:8081/api
 
+# A new push to the same PR cancels the superseded run; pushes to main are
+# never cancelled so the recorded run always completes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  static:
+    name: Static Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check stage tags
+        run: npm run check:tags
+
   api-tests:
     name: API Tests
+    needs: static
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -40,10 +81,26 @@ jobs:
         if: always()
         run: docker compose down -v --remove-orphans
 
-  playwright-tests:
-    name: Playwright Tests
+  plan-shards:
+    name: Plan UI Shards
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 5
+    outputs:
+      shards: ${{ steps.matrix.outputs.shards }}
+
+    steps:
+      - name: Build shard matrix
+        id: matrix
+        env:
+          SHARD_COUNT: ${{ github.event.inputs.shards || 1 }}
+        run: |
+          echo "shards=$(node -e 'console.log(JSON.stringify(Array.from({ length: Number(process.env.SHARD_COUNT) }, (_, i) => i + 1)))')" >> "$GITHUB_OUTPUT"
+
+  ui-smoke:
+    name: UI Smoke
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -58,35 +115,110 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-
-      - name: Type check
-        run: npm run typecheck
 
       - name: Start self-hosted RealWorld stack
         run: npm run stack:up
 
-      - name: Run UI tests
-        run: npm run test:ui
+      - name: Run smoke tests
+        env:
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/smoke
+        run: npm run test:smoke
 
-      - name: Run cross-layer tests
-        run: npm run test:cross
+      - name: Upload smoke blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-smoke
+          path: blob-report/smoke
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload smoke traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-traces
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Stop stack
         if: always()
         run: npm run stack:down
 
-      - name: Upload Playwright report
+  ui-regression:
+    name: UI Regression (shard ${{ matrix.shard }}/${{ strategy.job-total }})
+    needs: [static, plan-shards]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan-shards.outputs.shards) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start self-hosted RealWorld stack
+        run: npm run stack:up
+
+      - name: Run regression tests
+        env:
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/regression-${{ matrix.shard }}
+        run: npm run test:regression -- --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+
+      - name: Upload regression blob report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
-          path: playwright-report/
+          name: blob-report-regression-${{ matrix.shard }}
+          path: blob-report/regression-${{ matrix.shard }}
           retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload regression traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-traces-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop stack
+        if: always()
+        run: npm run stack:down
 
   visual-tests:
     name: Visual Tests
+    needs: static
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -109,6 +241,8 @@ jobs:
       # Runs in mcr.microsoft.com/playwright, the same image used to create the
       # baselines. The host runner never renders the screenshots.
       - name: Run visual tests
+        env:
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/visual
         run: npm run test:visual:linux
 
       - name: Upload visual diffs
@@ -118,10 +252,69 @@ jobs:
           name: visual-diffs
           path: |
             test-results/
-            playwright-report/
+            blob-report/visual/
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Upload visual blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-visual
+          path: blob-report/visual
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Stop stack
         if: always()
         run: docker compose --profile visual down -v --remove-orphans
+
+  report:
+    name: Merged Report
+    needs: [api-tests, ui-smoke, ui-regression, visual-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+        continue-on-error: true
+
+      - name: Flatten blob reports
+        run: |
+          mkdir -p merged-blobs
+          find all-blob-reports -name 'report.zip' -print0 2>/dev/null |
+            while IFS= read -r -d '' file; do
+              shard=$(basename "$(dirname "$file")")
+              cp "$file" "merged-blobs/$shard.zip"
+            done
+          ls -l merged-blobs
+
+      - name: Merge reports
+        if: ${{ hashFiles('merged-blobs/*.zip') != '' }}
+        run: npx playwright merge-reports --reporter=html,list merged-blobs
+
+      - name: Upload merged report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-report
+          path: playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
