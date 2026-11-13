@@ -92,7 +92,7 @@ jobs:
       - name: Build shard matrix
         id: matrix
         env:
-          SHARD_COUNT: ${{ github.event.inputs.shards || 3 }}
+          SHARD_COUNT: ${{ github.event.inputs.shards || 1 }}
         run: |
           echo "shards=$(node -e 'console.log(JSON.stringify(Array.from({ length: Number(process.env.SHARD_COUNT) }, (_, i) => i + 1)))')" >> "$GITHUB_OUTPUT"
 
