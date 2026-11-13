@@ -1,15 +1,15 @@
 # Progress
 
-Last updated: 2026-11-12
+Last updated: 2026-11-13
 
 ## Current state
 
-- **Current work package:** WP5 complete and merged; docs follow-up is the only open item. WP6 requires explicit approval and a plan before code.
-- **Status:** WP5 merged to `main` as `068f56a` (PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7)) on 2026-11-02. Visual tests render only in `mcr.microsoft.com/playwright:v1.63.0-noble`; Windows baselines were removed. Post-merge `main` CI [run `41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) is green (2 m 09 s; API 1 m 14 s, Playwright 1 m 55 s, Visual 1 m 49 s). The PR run [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058) was green in 1 m 51 s, and the intentional-failure experiment [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) failed only the Visual job.
+- **Current work package:** WP6 implementation complete on `wp6/staged-ci-sharding`; CI is green on the staged 1-shard run and the 3-shard comparison run. The PR is not created yet (no `gh`/token on the workstation); the owner opens and merges it.
+- **Status:** WP5 merged to `main` as `068f56a` (PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7)) on 2026-11-02, and its docs follow-up merged as `183167e` (PR [#8](https://github.com/ifhamm/QA-Assessment/pull/8)) on 2026-11-13. Visual tests render only in `mcr.microsoft.com/playwright:v1.63.0-noble`; Windows baselines were removed. Post-merge `main` CI [run `41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) is green (2 m 09 s; API 1 m 14 s, Playwright 1 m 55 s, Visual 1 m 49 s). The PR run [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058) was green in 1 m 51 s, and the intentional-failure experiment [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) failed only the Visual job.
 - **CI policy:** local stability evidence uses `retries: 0`. CI uses one retry with `on-first-retry` tracing as an infrastructure safety net; failures are recorded honestly and failed jobs are rerun manually, never hidden with sleeps, skips, timeout inflation, or assertion changes.
 - **Repository:** `https://github.com/ifhamm/QA-Assessment`
-- **Baseline:** WP5 merged to `main` as `068f56a` (PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7)); WP4 merged as `494d243` (PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5)); WP3 merged as `3fffa6f` (PR [#4](https://github.com/ifhamm/QA-Assessment/pull/4)); WP2 merged as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
-- **Next work package:** WP6 — requires explicit owner approval and a written plan before implementation.
+- **Baseline:** WP5 docs merged to `main` as `183167e` (PR [#8](https://github.com/ifhamm/QA-Assessment/pull/8)); WP5 merged as `068f56a` (PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7)); WP4 merged as `494d243` (PR [#5](https://github.com/ifhamm/QA-Assessment/pull/5)); WP3 merged as `3fffa6f` (PR [#4](https://github.com/ifhamm/QA-Assessment/pull/4)); WP2 merged as `90e66ec` (PR [#3](https://github.com/ifhamm/QA-Assessment/pull/3)); WP1 merged as `e74a82d` (PR [#2](https://github.com/ifhamm/QA-Assessment/pull/2)); WP0 merged as `5364f30` (PR [#1](https://github.com/ifhamm/QA-Assessment/pull/1)).
+- **Next work package:** WP7 after WP6 merges. WP6 required explicit approval and a written plan; that gate is satisfied and the plan is in the decision note.
 
 ## Work package tracker
 
@@ -21,7 +21,7 @@ Last updated: 2026-11-12
 | WP3 | Complete, merged | `wp3/test-data-architecture` / [#4](https://github.com/ifhamm/QA-Assessment/pull/4) | Merged as `3fffa6f` on 2026-11-01. Worker-aware data factories, fixture-owned best-effort cleanup, `--grep` and `--fully-parallel` evidence, found the public API's global token defect. CI: main push green; PR run red (environment). |
 | WP4 | Complete, merged | `wp4/parallelism-reliability` / [#5](https://github.com/ifhamm/QA-Assessment/pull/5) | Merged as `494d243` on 2026-11-02. Self-hosted pinned RealWorld stack, 4 workers with `fullyParallel`, CI-only retry/trace, locator strict-mode fix. CI green on branch push/PR/main; API 1 m 57 s, Playwright 1 m 58 s on `main`. Docs follow-up: [#6](https://github.com/ifhamm/QA-Assessment/pull/6). |
 | WP5 | Complete, merged | `wp5/visual-linux-ci` / [#7](https://github.com/ifhamm/QA-Assessment/pull/7) | Merged as `068f56a` on 2026-11-02. Pinned Playwright container for visual tests, Linux baselines replace Windows, separate CI job, failure artifact. PR run [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058) green; post-merge `main` run [`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) green; intentional failure [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007). Docs: [`decisions/WP5-visual-linux-ci.md`](decisions/WP5-visual-linux-ci.md). |
-| WP6 | Not started | — | Requires explicit approval; plan required before code. |
+| WP6 | Implementation complete, PR pending | `wp6/staged-ci-sharding` / PR pending | Plan approved 2026-11-13 (add ESLint, sharding opt-in default 1). Staged jobs, `@smoke`/`@regression` + tag check, shard matrix, merged blob report, browser cache. 1-shard run [`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236) green (3 m 17 s, 8.7 runner-min); 3-shard run [`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291) green (3 m 07 s, 12.1 runner-min). Sharding does not pay at 7 tests. Docs: [`decisions/WP6-staged-ci-sharding.md`](decisions/WP6-staged-ci-sharding.md). |
 | WP7 | Not started | — | — |
 | WP8 | Not started | — | Optional/stretch. |
 | WP9 | Not started | — | README CI link, project tree, remaining docs. |
@@ -79,6 +79,19 @@ Last updated: 2026-11-12
 - Intentional failure: [run `41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007) on experiment commit `7254cb3`; only `Visual Tests` failed (1 m 49 s), and the `visual-diffs` artifact contained expected/actual/diff images.
 - Committed evidence: [`wp5-intentional-failure-diff.png`](evidence/wp5-intentional-failure-diff.png) and [`wp5-intentional-failure-actual.png`](evidence/wp5-intentional-failure-actual.png).
 - Merged: PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7) as `068f56a` on 2026-11-02. PR run [`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058) green (1 m 51 s); post-merge `main` run [`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) green (2 m 09 s; Visual 1 m 49 s).
+
+### WP6
+
+- [`docs/decisions/WP6-staged-ci-sharding.md`](decisions/WP6-staged-ci-sharding.md) — options, staged layout, tags, sharding decision, merge config, TypeScript/lint alias, trade-offs, and the workers-vs-shards data.
+- [`docs/pr/WP6-staged-ci-sharding.md`](pr/WP6-staged-ci-sharding.md) — PR description.
+- [`docs/metrics.md`](metrics.md) — WP6 before/after, local comparison, CI comparison, and the sharding conclusion.
+- [`.github/workflows/tests.yml`](../.github/workflows/tests.yml) — staged jobs, tag gate, shard matrix, merged report, caches.
+- [`scripts/check-test-tags.mjs`](../scripts/check-test-tags.mjs) — static tag check; [`eslint.config.mjs`](../eslint.config.mjs) — minimal lint.
+- [`playwright.merge.config.ts`](../playwright.merge.config.ts) — merge-only `testDir` so the container visual blob joins host blobs.
+- Green 1-shard run [`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236) — 3 m 17 s wall, 8.7 runner-minutes, `merged-report` 203 KB.
+- Green 3-shard evidence run [`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291) — 3 m 07 s wall, 12.1 runner-minutes; merged report contains smoke, three regression shards, and visual.
+- Failed intermediate run [`43434297464`](https://github.com/ifhamm/QA-Assessment/actions/runs/43434297464) — `Merged Report` job red because blob zips were not flattened. Fixed and guarded by a report-existence check.
+- Local (retries 0): five consecutive 4-worker runs 7/7; three smoke runs 4/4; three sharded regression batches 3/3; visual 2/2 in 3.3 s. Worker comparison: 1 worker 9.1–9.4 s wall / 7.9–8.1 s Playwright; 4 workers 7.0–7.9 s / 5.8–6.3 s.
 
 ## Baseline summary
 
@@ -144,6 +157,7 @@ Last updated: 2026-11-12
 ## Blockers / decisions needed
 
 1. **WP3 PR description is empty.** The PR is merged, but [#4](https://github.com/ifhamm/QA-Assessment/pull/4) has no description and its title is the default `Wp3/test data architecture`. Paste `docs/pr/WP3-test-data-architecture.md` into the merged PR (and retitle it `WP3: Test Data Architecture`) in the GitHub UI so the merge history satisfies the DoD.
-2. **WP5 docs follow-up.** PR [#8](https://github.com/ifhamm/QA-Assessment/pull/8) records the merge and post-merge CI; merge it after review. WP5 PR [#7](https://github.com/ifhamm/QA-Assessment/pull/7) now has its title and description.
-3. **WP6 scope and approval.** WP6 (staged CI pipeline and sharding) requires explicit owner approval and a written plan before any code.
-4. **CI policy (resolved for WP1–WP5).** Accept environment-dependent failures and rerun failed jobs manually. Local stability is proven without retries; CI has a single retry with first-retry tracing. WP5's visual job passed without consuming the retry.
+2. **WP5 docs follow-up resolved.** PR [#8](https://github.com/ifhamm/QA-Assessment/pull/8) merged as `183167e` on 2026-11-13; post-merge `main` run [`43428417145`](https://github.com/ifhamm/QA-Assessment/actions/runs/43428417145) was green (API 1 m 12 s, Playwright 1 m 52 s, Visual 1 m 51 s).
+3. **WP6 PR and merge (owner).** The plan was approved 2026-11-13 and the implementation is on `wp6/staged-ci-sharding`. Open the PR from `https://github.com/ifhamm/QA-Assessment/compare/main...wp6/staged-ci-sharding`, use `docs/pr/WP6-staged-ci-sharding.md` as the description, and merge after review. Do not push to `main`.
+4. **WP6 sharding default.** One shard is the default. Enable more shards through `workflow_dispatch` when the regression stage grows; the measured 3-shard run is the evidence, not a new default.
+5. **CI policy (resolved for WP1–WP6).** Accept environment-dependent failures and rerun failed jobs manually. Local stability is proven without retries; CI has a single retry with first-retry tracing. The cited WP6 evidence runs were green without consuming a retry; the intermediate merged-report failure was fixed in code, not retried.
