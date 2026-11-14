@@ -1,16 +1,42 @@
 # QA Automation Assessment
 
-This repository contains the automation deliverables for the RealWorld / Conduit QA Automation Mentorship Assessment. The solution covers API regression testing, UI functional testing, cross-layer verification, CI execution including visual regression, and optional performance testing.
+[![QA Automation Tests](https://github.com/ifhamm/QA-Assessment/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ifhamm/QA-Assessment/actions/workflows/tests.yml)
+
+End-to-end QA portfolio for the RealWorld / Conduit application: Postman/Newman API regression, Playwright UI functional, cross-layer, and visual tests, a pinned self-hosted Docker target, and an eight-job GitHub Actions pipeline with one merged report and a written quality gate.
+
+**Quick start** (Node.js 22+, npm, Docker):
+
+```bash
+npm ci
+npx playwright install chromium
+npm run stack:up      # build and wait for web :8081 and API :3000
+npm run test:local    # 7 host-rendered Playwright tests
+npm run stack:down    # stop and remove the disposable database
+```
+
+The Newman regression suite runs separately with `npm run test:api:local`. Full instructions are in [Setup](#setup); the design record starts at the [docs index](docs/README.md).
+
+## At a glance
+
+| Item | Value |
+| --- | --- |
+| API regression | 15 requests, 53 assertions |
+| Host Playwright runs | 7 (3 `@smoke`, 3 `@regression`, 1 setup) |
+| Visual regression | 2 tests, Linux-container baselines |
+| Optional performance | 1 k6 scenario, 150 iterations, 300 checks |
+| CI | 8 jobs; latest green `main` run 2 m 56 s |
+| Stability evidence | 10 consecutive 4-worker runs, retries 0; 41/41 repeats |
+| Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate` |
 
 ## Test Coverage
 
 | Area | Tool | Coverage |
 | --- | --- | --- |
 | API | Postman + Newman | 15 request/test cases with 53 `pm.test` assertions covering registration, login, CRUD, authorization, invalid request handling, favorite/unfavorite, and deletion verification |
-| UI Functional | Playwright + TypeScript | Successful login and article creation, invalid login, and protected-route redirect |
+| UI Functional | Playwright + TypeScript | Successful login and article creation, invalid credentials, protected-route redirect, and the authenticated dashboard |
 | Cross-layer | Playwright + APIRequestContext | API create -> UI verify, and UI update -> API verify |
-| Visual regression | Playwright screenshots | Login page and authenticated article editor |
-| Performance | k6 + local Express API | Low-load checks for product list and product detail endpoints |
+| Visual regression | Playwright screenshots | Login page and authenticated article editor, rendered in a pinned Linux container |
+| Performance (optional) | k6 + local Express API | Low-load checks for product list and product detail endpoints |
 
 ## Prerequisites
 
@@ -225,6 +251,36 @@ npm run test:perf
 
 The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresholds require an HTTP error rate below 1% and p95 response time below 500 ms globally and for both tested endpoints.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph suites["Test suites"]
+    N["API regression<br/>Postman + Newman"]
+    U["UI functional + dashboard<br/>Playwright"]
+    X["Cross-layer<br/>Playwright + APIRequestContext"]
+    V["Visual<br/>Playwright screenshots"]
+  end
+
+  F["fixtures/test-base.ts<br/>api · page objects · user · article"]
+  D["tests/test-data.ts<br/>worker-aware factories"]
+  S["tests/auth.setup.ts<br/>API token → storageState"]
+
+  W["Self-hosted RealWorld stack<br/>Angular web :8081 · Nitro/Prisma API :3000"]
+  DB[("Disposable SQLite DB")]
+
+  N -->|HTTP| W
+  U --> F
+  X --> F
+  V --> F
+  F --> D
+  F --> S
+  F -->|HTTP + browser| W
+  W --- DB
+```
+
+The suites share fixtures and data factories but not data: each data-owning test gets its own synthetic user and article. The API regression suite stays in Postman because it is the deliverable's API contract layer; Playwright's API helper exists for setup, cleanup, and cross-layer verification, not as a second regression suite.
+
 ## Project Structure
 
 ```text
@@ -232,7 +288,8 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 ├── .github/workflows/tests.yml       # GitHub Actions CI pipeline
 ├── eslint.config.mjs                 # Minimal TypeScript lint config
 ├── scripts/
-│   └── check-test-tags.mjs           # Enforces @smoke / @regression tags
+│   ├── check-test-tags.mjs           # Enforces @smoke / @regression tags
+│   └── ci-summary.mjs                # Job summary and gate evaluation
 ├── api/
 │   └── conduit-api.ts                # Playwright API helper for setup, cleanup, and cross-layer checks
 ├── docker/
@@ -254,15 +311,19 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 ├── postman/
 │   └── conduit.postman_collection.json
 ├── tests/
+│   ├── auth.setup.ts                 # API-built storage state for the setup project
 │   ├── cross-layer/                  # API <-> UI consistency tests
-│   ├── ui/                           # Playwright UI functional tests
-│   ├── visual/                       # Visual regression tests and baselines
+│   ├── ui/                           # UI functional tests and dashboard
+│   ├── visual/                       # Visual tests and *-visual-linux.png baselines
 │   ├── cleanup.ts                    # Best-effort cleanup wrapper
 │   └── test-data.ts                  # Worker-aware synthetic user/article generators
 ├── docs/
+│   ├── README.md                     # Documentation index
 │   ├── decisions/                    # One decision note per work package
-│   ├── evidence/                     # Committed visual failure evidence
+│   ├── evidence/                     # Committed job summaries and visual failure evidence
 │   ├── pr/                           # PR descriptions
+│   ├── metrics.md                    # Baseline and per-WP measurements
+│   ├── progress.md                   # Work package tracker and blockers
 │   └── quality-gates.md              # Block/warn policy and triage path
 ├── .dockerignore
 ├── .env.example
@@ -321,6 +382,24 @@ that motivated the self-hosted target are recorded in
 [`docs/decisions/WP4-parallelism-reliability.md`](docs/decisions/WP4-parallelism-reliability.md).
 
 The Postman/Newman collection also creates unique data and completes its main article lifecycle by deleting the created article and verifying that it is no longer available.
+
+## Before and after
+
+Measured in WP0 and re-measured after each work package; the full tables and run IDs are in [`docs/metrics.md`](docs/metrics.md).
+
+| Metric | WP0 baseline | Current `main` |
+| --- | --- | --- |
+| Playwright executions | 9 (1 setup + 8 user-facing) | 9 (1 setup + 8 user-facing) |
+| API regression | 15 requests / 53 assertions | unchanged |
+| Workers / retries | 1 worker, no `fullyParallel` | 4 workers, `fullyParallel`; retries 0 locally, 1 in CI as a safety net |
+| UI logins per full run | 5 successful (+1 invalid) | 1 successful (+1 invalid) |
+| Visual tests in CI | no; Windows-only baselines | yes; pinned Linux container, separate job |
+| CI pipeline | 2 flat jobs; red on `main` | 8 staged jobs + merged report + `Quality Gate`; latest green run 2 m 56 s |
+| Reports | HTML only | merged HTML + JUnit + JSON, job summary |
+| Flaky visibility | hidden by retries | listed and annotated in the summary; still non-blocking |
+| Stability evidence | none with >1 worker | 10 consecutive 4-worker runs (retries 0); 41/41 repeat probe |
+
+Latest green `main` run [`43562094955`](https://github.com/ifhamm/QA-Assessment/actions/runs/43562094955) (commit `05b4497`, docs merge): 2 m 56 s wall and 458 s summed job time. WP7's merge run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) records the gate at 11 s.
 
 ## CI Pipeline and Report
 
@@ -411,7 +490,10 @@ This avoids load-testing the shared public RealWorld practice environment.
 
 ## Known Limitations and Future Improvements
 
-- Functional and cross-layer browser coverage currently targets Chromium only; Firefox and WebKit projects can be added later for cross-browser coverage.
+- Functional and cross-layer browser coverage currently targets Chromium only; Firefox and WebKit smoke projects are the optional WP8 extension and are not implemented.
+- CI uses one retry with `on-first-retry` tracing as an infrastructure safety net. The stability claim does not rely on it: the recorded probes use retries 0. A test that only passes on retry is listed as flaky in the job summary and raises a warning instead of failing the run.
+- Triage is summary → artifact → merged report → trace. The summary links to artifacts, not to a hosted trace URL, so there is no single deep link from a failing test to its trace.
+- UI regression sharding is implemented and proven, but the matrix defaults to one shard because the measured cost does not justify more shards at this suite size.
 - The default local target is the self-hosted stack. Pointing the suite back at the public demo is still possible through `.env`, but parallel runs there remain unreliable because the public backend rotates other users' tokens during registration/login. The defect and the self-hosted decision are documented in the WP4 decision note.
 - The self-hosted stack pins the frontend and backend to specific commits. Updating those pins is a deliberate maintenance step; the backend also carries one small compatibility patch for the unauthorized-update status code.
 - Visual baselines are Linux-only and must be produced in the pinned Playwright container. Running the visual project directly on Windows or macOS would compare against a different renderer, so those hosts must use `npm run test:visual`.
