@@ -100,7 +100,9 @@ Missing from the repository at baseline but referenced by documentation or expec
 | 15 | "Node.js 22+". | CI uses Node 22; local audit used Node 24.13.0 successfully. | No mismatch observed. |
 | 16 | README does not document `AUTH_EMAIL`, `AUTH_PASSWORD`, `storageState`, `auth.setup.ts`, or the setup project. | All exist and are required for a normal full run. | Local setup and CI failure are hard to diagnose from the README. |
 
-**Status after the owner-approved unblock:** row 1 is resolved (`.env.example` added), row 5 is mitigated in CI (the workflow supplies synthetic values), and row 16 is partly addressed (the README now documents the auth variables and fallback). The stale CI link (row 2) and the incomplete project tree (row 3) remain for WP9.
+**Status after the owner-approved unblock:** row 1 is resolved (`.env.example` added), row 5 is mitigated in CI (the workflow supplies synthetic values), and row 16 is partly addressed (the README now documents the auth variables and fallback).
+
+**Post-WP9 status:** rows 2 and 3 are addressed. The README no longer quotes a stale run number; it uses the live CI badge for `tests.yml` instead. The project tree now includes `fixtures/`, `tests/auth.setup.ts`, the dashboard test, `scripts/ci-summary.mjs`, and `docs/README.md`. This audit remains a snapshot of `c5ec4f2`; see [`docs/README.md`](README.md) for the current documentation map.
 
 ---
 
