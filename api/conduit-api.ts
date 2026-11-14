@@ -110,7 +110,9 @@ export class ConduitAPI {
     const res = await this.request.delete(`${API_BASE}/articles/${slug}`, {
       headers: { Authorization: `Token ${token}` },
     });
-    if (!res.ok()) {
+    // A 404 means the article is already gone. Cleanup is idempotent: a test
+    // that deletes through the UI must not turn teardown into a warning.
+    if (res.status() !== 404 && !res.ok()) {
       console.warn(`Cleanup: delete article ${slug} returned ${res.status()}`);
     }
   }

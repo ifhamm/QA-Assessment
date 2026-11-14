@@ -26,14 +26,14 @@ One note per work package: the problem, the options considered, the decision, th
 | WP5 | [`decisions/WP5-visual-linux-ci.md`](decisions/WP5-visual-linux-ci.md) | The pinned Playwright container, Linux baselines, the failure artifact. |
 | WP6 | [`decisions/WP6-staged-ci-sharding.md`](decisions/WP6-staged-ci-sharding.md) | Staged jobs, `@smoke`/`@regression` tags, sharding, the merged report. |
 | WP7 | [`decisions/WP7-reporting-quality-gates.md`](decisions/WP7-reporting-quality-gates.md) | JUnit/JSON reporters, the job summary, the `Quality Gate` job, the policy. |
-| WP8 | — | Optional stretch (negative tests, Firefox/WebKit smoke); not started. |
+| WP8 | [`decisions/WP8-coverage-expansion.md`](decisions/WP8-coverage-expansion.md) | Negative UI/API cases, browser-vs-API level decisions, Firefox/WebKit smoke, gate integration. |
 | WP9 | [`decisions/WP9-documentation-portfolio-polish.md`](decisions/WP9-documentation-portfolio-polish.md) | This documentation and portfolio pass, and what was verified. |
 
 ## PR descriptions
 
 The PR body for each work package is committed here so the reasoning survives independently of GitHub.
 
-- [WP0](pr/WP0-baseline-audit.md), [WP1](pr/WP1-fixtures-abstraction-boundaries.md), [WP2](pr/WP2-reuse-auth-state.md), [WP3](pr/WP3-test-data-architecture.md), [WP4](pr/WP4-parallelism-reliability.md), [WP5](pr/WP5-visual-linux-ci.md), [WP6](pr/WP6-staged-ci-sharding.md), [WP7](pr/WP7-reporting-quality-gates.md), [WP9](pr/WP9-documentation-portfolio-polish.md).
+- [WP0](pr/WP0-baseline-audit.md), [WP1](pr/WP1-fixtures-abstraction-boundaries.md), [WP2](pr/WP2-reuse-auth-state.md), [WP3](pr/WP3-test-data-architecture.md), [WP4](pr/WP4-parallelism-reliability.md), [WP5](pr/WP5-visual-linux-ci.md), [WP6](pr/WP6-staged-ci-sharding.md), [WP7](pr/WP7-reporting-quality-gates.md), [WP8](pr/WP8-coverage-expansion.md), [WP9](pr/WP9-documentation-portfolio-polish.md).
 
 ## Evidence
 

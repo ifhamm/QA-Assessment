@@ -9,6 +9,8 @@ import { ArticlePage } from "../pages/article.page";
 import { EditorPage } from "../pages/editor.page";
 import { LoginPage } from "../pages/login.page";
 import { NavBar } from "../pages/navbar.component";
+import { RegisterPage } from "../pages/register.page";
+import { SettingsPage } from "../pages/settings.page";
 import { JWT_STORAGE_KEY } from "../tests/auth-storage";
 import { bestEffortCleanup } from "../tests/cleanup";
 import { syntheticArticle, syntheticUser } from "../tests/test-data";
@@ -32,6 +34,8 @@ export type TestArticle = {
 type Fixtures = {
   api: ConduitAPI;
   loginPage: LoginPage;
+  registerPage: RegisterPage;
+  settingsPage: SettingsPage;
   editorPage: EditorPage;
   articlePage: ArticlePage;
   navBar: NavBar;
@@ -46,6 +50,12 @@ export const test = base.extend<Fixtures>({
   },
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
+  },
+  registerPage: async ({ page }, use) => {
+    await use(new RegisterPage(page));
+  },
+  settingsPage: async ({ page }, use) => {
+    await use(new SettingsPage(page));
   },
   editorPage: async ({ page }, use) => {
     await use(new EditorPage(page));

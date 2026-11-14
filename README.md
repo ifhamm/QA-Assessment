@@ -2,7 +2,7 @@
 
 [![QA Automation Tests](https://github.com/ifhamm/QA-Assessment/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ifhamm/QA-Assessment/actions/workflows/tests.yml)
 
-End-to-end QA portfolio for the RealWorld / Conduit application: Postman/Newman API regression, Playwright UI functional, cross-layer, and visual tests, a pinned self-hosted Docker target, and an eight-job GitHub Actions pipeline with one merged report and a written quality gate.
+End-to-end QA portfolio for the RealWorld / Conduit application: Postman/Newman API regression, Playwright UI functional, cross-layer, cross-browser smoke, and visual tests, a pinned self-hosted Docker target, and a ten-job GitHub Actions pipeline with one merged report and a written quality gate.
 
 **Quick start** (Node.js 22+, npm, Docker):
 
@@ -10,7 +10,7 @@ End-to-end QA portfolio for the RealWorld / Conduit application: Postman/Newman 
 npm ci
 npx playwright install chromium
 npm run stack:up      # build and wait for web :8081 and API :3000
-npm run test:local    # 7 host-rendered Playwright tests
+npm run test:local    # 12 host tests (Chromium + setup)
 npm run stack:down    # stop and remove the disposable database
 ```
 
@@ -20,21 +20,23 @@ The Newman regression suite runs separately with `npm run test:api:local`. Full 
 
 | Item | Value |
 | --- | --- |
-| API regression | 15 requests, 53 assertions |
-| Host Playwright runs | 7 (3 `@smoke`, 3 `@regression`, 1 setup) |
+| API regression | 17 requests, 57 assertions |
+| Host Playwright runs | 12 (3 `@smoke`, 8 `@regression`, 1 setup) |
+| Cross-browser smoke | 3 `@smoke` tests on Firefox and WebKit, separate matrix job |
 | Visual regression | 2 tests, Linux-container baselines |
 | Optional performance | 1 k6 scenario, 150 iterations, 300 checks |
-| CI | 8 jobs; latest green `main` run 2 m 49 s |
-| Stability evidence | 10 consecutive 4-worker runs, retries 0; 41/41 repeats |
+| CI | 10 jobs; latest green `main` run 2 m 49 s |
+| Stability evidence | 10 consecutive 4-worker runs, retries 0; 150/150 negative repeats; 61/61 cross-browser repeats |
 | Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate` |
 
 ## Test Coverage
 
 | Area | Tool | Coverage |
 | --- | --- | --- |
-| API | Postman + Newman | 15 request/test cases with 53 `pm.test` assertions covering registration, login, CRUD, authorization, invalid request handling, favorite/unfavorite, and deletion verification |
-| UI Functional | Playwright + TypeScript | Successful login and article creation, invalid credentials, protected-route redirect, and the authenticated dashboard |
+| API | Postman + Newman | 17 request/test cases with 57 `pm.test` assertions covering registration, duplicate registration, login, CRUD, authorization, malformed tokens, invalid request handling, favorite/unfavorite, and deletion verification |
+| UI Functional | Playwright + TypeScript | Successful login and article creation, invalid credentials, protected-route redirect, registration gating, empty-article validation, logout, invalid stored tokens, article deletion, and the authenticated dashboard |
 | Cross-layer | Playwright + APIRequestContext | API create -> UI verify, and UI update -> API verify |
+| Cross-browser smoke | Playwright + Firefox/WebKit | The three `@smoke` tests on each engine, in a separate matrix job; visual and regression stay Chromium-only |
 | Visual regression | Playwright screenshots | Login page and authenticated article editor, rendered in a pinned Linux container |
 | Performance (optional) | k6 + local Express API | Low-load checks for product list and product detail endpoints |
 
@@ -156,6 +158,20 @@ npm run test:ui:functional
 ```bash
 npm run test:cross
 ```
+
+### Cross-browser smoke tests
+
+The three `@smoke` tests also run on Firefox and WebKit. Install those engines
+once, then run both projects:
+
+```bash
+npx playwright install firefox webkit
+npm run test:browser:smoke
+```
+
+The projects reuse the API-built storage state, so no browser-specific login
+setup is needed. CI runs each engine in its own matrix job and merges both blobs
+into the same report and quality gate.
 
 ### Visual regression tests
 
@@ -303,6 +319,8 @@ The suites share fixtures and data factories but not data: each data-owning test
 │   ├── article.page.ts               # Article page object
 │   ├── editor.page.ts                # Article editor page object
 │   ├── login.page.ts                 # Login page object
+│   ├── register.page.ts              # Registration page object
+│   ├── settings.page.ts              # Settings page object (logout)
 │   └── navbar.component.ts           # Reusable navbar component assertions
 ├── performance/
 │   ├── app/server.js                 # Local Express API used only for performance testing
@@ -313,7 +331,7 @@ The suites share fixtures and data factories but not data: each data-owning test
 ├── tests/
 │   ├── auth.setup.ts                 # API-built storage state for the setup project
 │   ├── cross-layer/                  # API <-> UI consistency tests
-│   ├── ui/                           # UI functional tests and dashboard
+│   ├── ui/                           # UI functional, negative, and dashboard tests
 │   ├── visual/                       # Visual tests and *-visual-linux.png baselines
 │   ├── cleanup.ts                    # Best-effort cleanup wrapper
 │   └── test-data.ts                  # Worker-aware synthetic user/article generators
@@ -389,15 +407,16 @@ Measured in WP0 and re-measured after each work package; the full tables and run
 
 | Metric | WP0 baseline | Current `main` |
 | --- | --- | --- |
-| Playwright executions | 9 (1 setup + 8 user-facing) | 9 (1 setup + 8 user-facing) |
-| API regression | 15 requests / 53 assertions | unchanged |
+| Playwright tests (definitions) | 9 (1 setup + 8 user-facing) | 14 (1 setup + 13 user-facing) |
+| API regression | 15 requests / 53 assertions | 17 requests / 57 assertions |
 | Workers / retries | 1 worker, no `fullyParallel` | 4 workers, `fullyParallel`; retries 0 locally, 1 in CI as a safety net |
 | UI logins per full run | 5 successful (+1 invalid) | 1 successful (+1 invalid) |
 | Visual tests in CI | no; Windows-only baselines | yes; pinned Linux container, separate job |
-| CI pipeline | 2 flat jobs; red on `main` | 8 staged jobs + merged report + `Quality Gate`; latest green run 2 m 49 s |
+| Cross-browser smoke | none | Firefox + WebKit `@smoke` matrix, merged into the report and gate |
+| CI pipeline | 2 flat jobs; red on `main` | 10 jobs (8 stage types + 2-engine matrix) + merged report + `Quality Gate`; latest green run 2 m 49 s |
 | Reports | HTML only | merged HTML + JUnit + JSON, job summary |
 | Flaky visibility | hidden by retries | listed and annotated in the summary; still non-blocking |
-| Stability evidence | none with >1 worker | 10 consecutive 4-worker runs (retries 0); 41/41 repeat probe |
+| Stability evidence | none with >1 worker | 10 consecutive 4-worker runs (retries 0); 150/150 negative repeats; 61/61 cross-browser repeats |
 
 Latest green `main` run [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) (commit `0736f7c`, WP9 merge): 2 m 49 s wall and 463 s summed job time. WP7's merge run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) records the gate at 11 s.
 
@@ -409,6 +428,7 @@ cheap failure stops before any container build:
 ```text
 Static Checks (typecheck, lint, tags) ─┬─ API Tests
                                        ├─ UI Smoke (@smoke)
+                                       ├─ Browser Smoke (Firefox + WebKit)
                                        ├─ UI Regression (@regression, shards)
                                        └─ Visual Tests (pinned image)
                                                 ↓
@@ -422,7 +442,9 @@ Static Checks (typecheck, lint, tags) ─┬─ API Tests
   `http://localhost:3000`.
 - **UI Smoke** runs the three `@smoke` host tests plus setup against
   `http://localhost:8081`.
-- **UI Regression** runs the three `@regression` tests with `--no-deps`.
+- **Browser Smoke** runs the same three `@smoke` tests on Firefox and WebKit
+  (`fail-fast: false`), with one blob and one results artifact per engine.
+- **UI Regression** runs the eight `@regression` tests with `--no-deps`.
   The matrix defaults to one shard; `workflow_dispatch` can request more.
 - **Visual Tests** builds both containers and runs the two visual tests inside
   `mcr.microsoft.com/playwright:v1.63.0-noble`; failed comparisons upload
@@ -443,7 +465,7 @@ Static Checks (typecheck, lint, tags) ─┬─ API Tests
   between jobs, which is the main cost of the staged layout.
 
 Sharding is implemented and proven, but it is opt-in because the measurements
-do not justify it for 7 tests. The 1-shard staged run
+do not justify it for 12 host tests. The 1-shard staged run
 [`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236)
 took 3 m 17 s and 8.7 runner-minutes; the 3-shard run
 [`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291)
@@ -490,7 +512,7 @@ This avoids load-testing the shared public RealWorld practice environment.
 
 ## Known Limitations and Future Improvements
 
-- Functional and cross-layer browser coverage currently targets Chromium only; Firefox and WebKit smoke projects are the optional WP8 extension and are not implemented.
+- Cross-browser coverage is smoke-only: the three `@smoke` tests run on Firefox and WebKit in a separate job. Functional, regression, and visual coverage remain Chromium-only; adding visual baselines per engine would multiply the baseline set and is deliberately out of scope.
 - CI uses one retry with `on-first-retry` tracing as an infrastructure safety net. The stability claim does not rely on it: the recorded probes use retries 0. A test that only passes on retry is listed as flaky in the job summary and raises a warning instead of failing the run.
 - Triage is summary → artifact → merged report → trace. The summary links to artifacts, not to a hosted trace URL, so there is no single deep link from a failing test to its trace.
 - UI regression sharding is implemented and proven, but the matrix defaults to one shard because the measured cost does not justify more shards at this suite size.
