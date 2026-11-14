@@ -76,7 +76,7 @@ uploaded with `if: always()` so a red stage keeps its evidence.
 | Summary, missing inputs | exit 1; explicit reasons |
 | Workflow YAML | parses; 8 jobs; artifact names verified |
 | Green branch run | [`43552638345`](https://github.com/ifhamm/QA-Assessment/actions/runs/43552638345) — success, 2 m 44 s wall, gate 8 s |
-| Job summary artifact | `summary` downloaded: 9 passed / 0 failed / 0 flaky; 15 requests, 53 assertions; committed as [`wp7-green-summary.md`](evidence/wp7-green-summary.md) |
+| Job summary artifact | `summary` downloaded: 9 passed / 0 failed / 0 flaky; 15 requests, 53 assertions; committed as [`wp7-green-summary.md`](../evidence/wp7-green-summary.md) |
 | Intentional failure run | [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095) — smoke + gate red, merged report green, trace yes |
 | Flaky warning run | [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227) — green, `##[warning]`, `regression-1` |
 | Post-revert green run | [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785) — success |
