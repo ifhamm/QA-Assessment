@@ -171,6 +171,30 @@ uploads the expected, actual, and diff images as the `visual-diffs` artifact.
 npm run typecheck
 ```
 
+### Lint and stage tags
+
+```bash
+npm run lint        # ESLint 10 + typescript-eslint
+npm run check:tags  # every host test carries @smoke or @regression
+```
+
+TypeScript 7 provides the `tsc` used by `npm run typecheck`. ESLint runs against
+the TypeScript 6 compiler API (installed under the `typescript` alias) because
+`typescript-eslint` does not support the TS 7 API yet; see the WP6 decision
+note for details.
+
+### Tags and staged runs
+
+Each host test carries exactly one tag: `@smoke` for the fast gate, or
+`@regression` for the deeper checks. Setup and visual tests stay untagged.
+`npm run check:tags` fails when a tag is missing, duplicated, or attached to
+the wrong project.
+
+```bash
+npm run test:smoke       # 3 tagged tests + setup
+npm run test:regression  # 3 tagged tests, no setup dependency
+```
+
 ### All Playwright tests
 
 ```bash
@@ -206,6 +230,9 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 ```text
 .
 ├── .github/workflows/tests.yml       # GitHub Actions CI pipeline
+├── eslint.config.mjs                 # Minimal TypeScript lint config
+├── scripts/
+│   └── check-test-tags.mjs           # Enforces @smoke / @regression tags
 ├── api/
 │   └── conduit-api.ts                # Playwright API helper for setup, cleanup, and cross-layer checks
 ├── docker/
@@ -242,6 +269,7 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 ├── package.json
 ├── package-lock.json
 ├── playwright.config.ts
+├── playwright.merge.config.ts        # Merge-only testDir for blob reports
 └── tsconfig.json
 ```
 
@@ -254,11 +282,12 @@ Page Object Model classes centralize UI locators and common interactions for the
 Synthetic users and articles are generated for test isolation rather than relying on shared fixed test accounts. UI and cross-layer tests use API calls for efficient setup and cleanup when the UI behavior under test does not require performing those steps through the browser.
 
 The Playwright configuration uses Chromium, a fixed 1280x720 viewport,
-`fullyParallel`, four workers, HTML reporting, and screenshots on failure.
-Local runs use zero retries and retain traces on failure; CI uses one retry and
-records a trace on the first retry. The retry is an infrastructure safety net,
-not the stability claim: the WP4 acceptance probe is 10 consecutive four-worker
-runs with retries disabled.
+`fullyParallel`, four workers, screenshots on failure, and an HTML report
+locally. CI writes blob reports and merges them into one HTML artifact, so a
+sharded run still produces a single report. Local runs use zero retries and
+retain traces on failure; CI uses one retry and records a trace on the first
+retry. The retry is an infrastructure safety net, not the stability claim: the
+WP4 acceptance probe is 10 consecutive four-worker runs with retries disabled.
 
 The test target is a self-hosted stack rather than the shared public demo. WP3
 proved that the public backend rotates other users' tokens during concurrent
@@ -292,28 +321,57 @@ The Postman/Newman collection also creates unique data and completes its main ar
 
 ## CI Pipeline and Report
 
-GitHub Actions runs on every push and pull request. Both jobs build and start
-the self-hosted stack, so CI does not depend on the public demo or repository
-variables:
+GitHub Actions runs on every push and pull request. The pipeline is staged so a
+cheap failure stops before any container build:
 
-- **API job** builds the API container and runs Newman against
+```text
+Static Checks (typecheck, lint, tags) ─┬─ API Tests
+                                       ├─ UI Smoke (@smoke)
+                                       ├─ UI Regression (@regression, shards)
+                                       └─ Visual Tests (pinned image)
+                                                ↓
+                                          Merged Report
+```
+
+- **Static Checks** runs typecheck, ESLint, and the tag check.
+- **API Tests** builds the API container and runs Newman against
   `http://localhost:3000`.
-- **Playwright job** builds both containers, runs typecheck, then the UI and
-  cross-layer suites against `http://localhost:8081`.
-- **Visual Tests job** builds both containers and runs the two visual tests
-  inside the pinned Playwright image; failed comparisons upload `visual-diffs`.
-- Each job removes the stack with `docker compose down -v` in an `always()` step.
-- Playwright installs Chromium and uploads the HTML report as an artifact,
-  retained for 7 days.
+- **UI Smoke** runs the three `@smoke` host tests plus setup against
+  `http://localhost:8081`.
+- **UI Regression** runs the three `@regression` tests with `--no-deps`.
+  The matrix defaults to one shard; `workflow_dispatch` can request more.
+- **Visual Tests** builds both containers and runs the two visual tests inside
+  `mcr.microsoft.com/playwright:v1.63.0-noble`; failed comparisons upload
+  `visual-diffs`.
+- **Merged Report** downloads every `blob-report-*`, merges them with
+  `playwright.merge.config.ts`, verifies `playwright-report/index.html`, and
+  uploads `merged-report`. The merge config pins `testDir` because the visual
+  container records `/work/tests` while host jobs record the runner path.
+- Each job removes the stack with `docker compose down -v` in an `always()`
+  step. npm and Playwright browsers are cached; Docker layers are not shared
+  between jobs, which is the main cost of the staged layout.
+
+Sharding is implemented and proven, but it is opt-in because the measurements
+do not justify it for 7 tests. The 1-shard staged run
+[`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236)
+took 3 m 17 s and 8.7 runner-minutes; the 3-shard run
+[`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291)
+took 3 m 07 s and 12.1 runner-minutes. Both produced a merged report with all
+stages. The full comparison, including the retry-free local runs and the
+worker benchmark, is in
+[`docs/decisions/WP6-staged-ci-sharding.md`](docs/decisions/WP6-staged-ci-sharding.md)
+and [`docs/metrics.md`](docs/metrics.md).
 
 WP5 merged to `main` as `068f56a` (PR
-[#7](https://github.com/ifhamm/QA-Assessment/pull/7)) on 2026-11-02.
+[#7](https://github.com/ifhamm/QA-Assessment/pull/7)) on 2026-11-02; its docs
+follow-up merged as `183167e` (PR
+[#8](https://github.com/ifhamm/QA-Assessment/pull/8)) on 2026-11-13.
 
-Green `main` run [41469719183](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183)
-in 2 m 09 s: API 1 m 14 s, Playwright 1 m 55 s, Visual 1 m 49 s. The PR run
-[`41469698058`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469698058)
-was also green (1 m 51 s). The workflow uses one CI retry with
-`on-first-retry` tracing; local stability evidence remains retry-free.
+Green pre-WP6 `main` run
+[41469719183](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183)
+in 2 m 09 s: API 1 m 14 s, Playwright 1 m 55 s, Visual 1 m 49 s. The workflow
+uses one CI retry with `on-first-retry` tracing; local stability evidence
+remains retry-free.
 
 ## Additional Coverage
 

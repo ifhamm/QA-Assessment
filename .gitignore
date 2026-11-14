@@ -10,6 +10,8 @@ node_modules/
 playwright-report/
 test-results/
 blob-report/
+all-blob-reports/
+merged-blobs/
 playwright/.cache/
 playwright/.auth/
 

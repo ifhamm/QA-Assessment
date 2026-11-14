@@ -4,7 +4,7 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe("Cross-Layer Tests", () => {
   // ─── Test 1: API create → UI verify ─────────────────────────────────
-  test("article created via API is visible in the UI", async ({
+  test("article created via API is visible in the UI @smoke", async ({
     authenticatedPage: page,
     user,
     articlePage,
@@ -24,7 +24,7 @@ test.describe("Cross-Layer Tests", () => {
   });
 
   // ─── Test 2: UI update → API verify ─────────────────────────────────
-  test("article updated via UI is reflected in the API", async ({
+  test("article updated via UI is reflected in the API @regression", async ({
     authenticatedPage: page,
     api,
     user,

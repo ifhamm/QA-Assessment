@@ -57,6 +57,9 @@ services:
       BASE_URL: http://web
       API_BASE_URL: http://web/api
       TZ: UTC
+      # Empty locally so the visual run keeps its HTML report; CI sets a
+      # per-job directory so the result can join the merged report.
+      PLAYWRIGHT_BLOB_OUTPUT_DIR: ${PLAYWRIGHT_BLOB_OUTPUT_DIR:-}
     command:
       [
         "node",

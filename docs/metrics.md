@@ -500,22 +500,97 @@ and
 The experiment branch `experiment/wp5-visual-failure` was deleted after the
 artifact was captured; the run link above remains the durable evidence.
 
+## WP6 - Staged CI Pipeline & Sharding (2026-11-13)
+
+### Before / after
+
+| Aspect | Before WP6 | After WP6 |
+| --- | --- | --- |
+| CI jobs | 3 flat jobs | static, API, UI smoke, sharded UI regression, visual, merged report |
+| Tags | none | `@smoke` / `@regression`, enforced by `npm run check:tags` |
+| Sharding | none | opt-in matrix (`workflow_dispatch`), default 1 shard |
+| Report | separate HTML run folders; the second Playwright invocation overwrote the first | one merged HTML report from blob artifacts |
+| Lint | none | ESLint 10 + `typescript-eslint` 8 |
+| Browser cache | none | `~/.cache/ms-playwright` keyed by lockfile |
+| CI wall / runner-minutes | 2 m 09 s / 4.9 | 3 m 17 s / 8.7 (1 shard); 3 m 07 s / 12.1 (3 shards) |
+
+### Local comparison (warm stack, retries 0)
+
+Five consecutive full runs at 4 workers, all green:
+
+| Run | Wall | Playwright |
+| ---: | ---: | ---: |
+| 1 | 7.9 s | 6.3 s |
+| 2 | 7.1 s | 5.8 s |
+| 3 | 7.0 s | 5.8 s |
+| 4 | 7.1 s | 5.9 s |
+| 5 | 7.2 s | 5.8 s |
+
+| Workers | Runs | Wall | Playwright |
+| ---: | --- | ---: | ---: |
+| 1 | 3 | 9.1–9.4 s | 7.9–8.1 s |
+| 4 | 5 | 7.0–7.9 s | 5.8–6.3 s |
+
+Three sequential regression shards (3 tests, not a full-suite comparison):
+sum wall 24.5–25.4 s, sum Playwright 20.9–22.1 s. Smoke stage alone: 15.2–15.7 s
+wall, 14.0–14.6 s Playwright, 4 passed. Visual: 2 passed in 3.3 s.
+
+### CI
+
+| Configuration | Run | Wall | Runner-minutes | Merged report |
+| --- | --- | ---: | ---: | --- |
+| Flat 3 jobs, 4 workers (pre-WP6 `main`) | [`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) | 2 m 09 s | 4.9 | No |
+| Staged, 1 shard | [`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236) | 3 m 17 s | 8.7 | 203 KB |
+| Staged, 3 shards | [`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291) | 3 m 07 s | 12.1 | Yes |
+
+Wall time includes hosted-runner queueing and varies between otherwise identical
+runs: the final docs-only run
+[`43437504829`](https://github.com/ifhamm/QA-Assessment/actions/runs/43437504829)
+waited 160 s before its first job started, so its end-to-end wall was 5 m 23 s
+while its job durations summed to 7.5 runner-minutes. Use job durations and
+runner-minutes for comparisons; the evidence runs above had 3–4 s of queue
+before their first job. The final run still produced the 203 KB merged report
+and all jobs were green.
+
+The 3-shard run came from a temporary commit that defaulted the matrix to
+three shards and was reverted immediately. Intermediate run
+[`43434297464`](https://github.com/ifhamm/QA-Assessment/actions/runs/43434297464)
+failed the `Merged Report` job: blob files are named
+`report-<project>-<shard>.zip`, so the flatten step found nothing and the
+merge was skipped. An earlier run (`43433653244`) uploaded no `merged-report`
+for the same reason. The flatten step now copies every `*.zip`, uses
+`playwright.merge.config.ts` so the container's `/work/tests` blob merges with
+host blobs, and a `Verify merged report` step fails the job when
+`playwright-report/index.html` is missing.
+
+**Conclusion:** at 7 tests, sharding pays in neither wall time nor
+runner-minutes. Three shards are 10 s faster in wall time than one shard but
+cost 3.4 more runner-minutes. The staged split itself costs 3.8 more
+runner-minutes and 68 s more wall time than the flat workflow because every
+stage rebuilds the stack. Keep the stages for isolation and future growth,
+keep one shard by default, and enable sharding when the regression stage
+outgrows shard startup.
+
 ## Reporting quality
 
 | Metric | Baseline |
 | --- | --- |
-| Reporters | `html` only |
+| Reporters | Local `html`; CI `blob` + `line`; merged `html` |
 | Local HTML | `playwright-report/index.html` |
 | Trace | Local `retain-on-failure`; CI `on-first-retry` |
 | Screenshot | `only-on-failure` |
 | Retries | 0 locally; 1 in CI |
 | Workers | 4, `fullyParallel: true` |
 | Video | No |
-| JUnit / JSON | No |
-| Job summary | No |
-| CI artifact | `playwright-report`, 7-day retention; `visual-diffs` on visual failure |
+| JUnit / JSON | No (WP7) |
+| Job summary | No (WP7) |
+| CI artifact | `merged-report`, `blob-report-*`, traces per failed stage, `visual-diffs` on visual failure; 7-day retention |
 
-**Qualitative:** better than a bare console. A failure leaves an HTML report, screenshot, error context, and (on failure) a trace. There is no merged report, no JUnit output, no job summary, and no direct link from a CI summary to a trace. Triage still requires opening the artifact manually.
+**Qualitative:** better than a bare console. A failure leaves a screenshot,
+error context, and (on failure) a trace. The merged report now contains every
+stage in one artifact, including the container-rendered visual tests. There is
+still no JUnit output, no job summary, and no direct link from a CI summary to
+a trace; those remain WP7's quality-gate scope.
 
 ## Tooling health
 
@@ -531,11 +606,17 @@ artifact was captured; the run link above remains the durable evidence.
 | UI script | `npm run test:ui` | Present; runs `tests/ui` (functional + dashboard). `test:ui:functional` runs functional only. |
 | Cross-layer script | `npm run test:cross` | Present |
 | Visual script | `npm run test:visual` | Present; runs the 2 visual tests in the pinned Playwright container |
+| Smoke script | `npm run test:smoke` | Present; runs the 3 `@smoke` host tests plus setup |
+| Regression script | `npm run test:regression` | Present; runs the 3 `@regression` host tests with `--no-deps` |
+| Tag check | `npm run check:tags` | Pass; 3 `@smoke`, 3 `@regression`, 2 visual |
+| Merged report | `npm run report:merge` | Present; merges blob reports with `playwright.merge.config.ts` |
 | Performance script | `cd performance && npm run test:perf` | Present |
-| Lint | N/A | No lint script/config |
+| Lint | `npm run lint` | Pass (exit 0); ESLint 10 + `typescript-eslint` 8 |
 
 ## Reference
 
 - Detailed findings: [`docs/audit.md`](audit.md)
 - WP0 decision note: [`docs/decisions/WP0-baseline-audit.md`](decisions/WP0-baseline-audit.md)
 - WP4 decision note: [`docs/decisions/WP4-parallelism-reliability.md`](decisions/WP4-parallelism-reliability.md)
+- WP5 decision note: [`docs/decisions/WP5-visual-linux-ci.md`](decisions/WP5-visual-linux-ci.md)
+- WP6 decision note: [`docs/decisions/WP6-staged-ci-sharding.md`](decisions/WP6-staged-ci-sharding.md)
