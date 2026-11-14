@@ -73,8 +73,10 @@ Claims in the README were checked against the repository rather than recalled:
 | Relative links and anchors | Local link check over every `*.md` in the repository |
 | No unrelated behavior change | `git diff --stat` limited to `README.md`, `docs/`; workflow, tests, and config untouched |
 
-CI runs the full eight-job pipeline on the PR; the PR run link is recorded in
-`docs/progress.md` and the PR body.
+CI runs the full eight-job pipeline on the PR; the PR run
+[`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950)
+was green in 2 m 49 s (459 s summed job time, `Quality Gate` 12 s). The PR run
+link is also recorded in `docs/progress.md` and the PR body.
 
 ## Trade-offs and risks
 

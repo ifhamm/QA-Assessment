@@ -42,7 +42,7 @@ The plan was presented on 2026-11-14 and approved by the owner as written, inclu
 | Local checks | `typecheck`, `lint`, `check:tags` exit 0 |
 | Link check | all relative links and anchors resolve |
 | Diff scope | `README.md`, `docs/README.md`, `docs/audit.md`, `docs/progress.md`, `docs/decisions/WP9-*.md`, `docs/pr/WP9-*.md` |
-| CI on this PR | full eight-job pipeline |
+| CI on this PR | [`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950) — success, 2 m 49 s wall, 459 s summed job time, `Quality Gate` 12 s, all 8 jobs |
 
 ## Open questions
 
