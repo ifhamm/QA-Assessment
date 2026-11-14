@@ -262,7 +262,8 @@ The k6 scenario ramps from 0 to 5 VUs, holds 5 VUs, then ramps down. The thresho
 ├── docs/
 │   ├── decisions/                    # One decision note per work package
 │   ├── evidence/                     # Committed visual failure evidence
-│   └── pr/                           # PR descriptions
+│   ├── pr/                           # PR descriptions
+│   └── quality-gates.md              # Block/warn policy and triage path
 ├── .dockerignore
 ├── .env.example
 ├── docker-compose.yml                # Self-hosted web + API stack
@@ -284,10 +285,12 @@ Synthetic users and articles are generated for test isolation rather than relyin
 The Playwright configuration uses Chromium, a fixed 1280x720 viewport,
 `fullyParallel`, four workers, screenshots on failure, and an HTML report
 locally. CI writes blob reports and merges them into one HTML artifact, so a
-sharded run still produces a single report. Local runs use zero retries and
-retain traces on failure; CI uses one retry and records a trace on the first
-retry. The retry is an infrastructure safety net, not the stability claim: the
-WP4 acceptance probe is 10 consecutive four-worker runs with retries disabled.
+sharded run still produces a single report; each stage also emits JUnit and JSON,
+and a `Quality Gate` job turns every stage result into one job summary. Local
+runs use zero retries and retain traces on failure; CI uses one retry and
+records a trace on the first retry. The retry is an infrastructure safety net,
+not the stability claim: the WP4 acceptance probe is 10 consecutive four-worker
+runs with retries disabled.
 
 The test target is a self-hosted stack rather than the shared public demo. WP3
 proved that the public backend rotates other users' tokens during concurrent
@@ -331,6 +334,8 @@ Static Checks (typecheck, lint, tags) ─┬─ API Tests
                                        └─ Visual Tests (pinned image)
                                                 ↓
                                           Merged Report
+                                                ↓
+                                          Quality Gate
 ```
 
 - **Static Checks** runs typecheck, ESLint, and the tag check.
@@ -346,7 +351,14 @@ Static Checks (typecheck, lint, tags) ─┬─ API Tests
 - **Merged Report** downloads every `blob-report-*`, merges them with
   `playwright.merge.config.ts`, verifies `playwright-report/index.html`, and
   uploads `merged-report`. The merge config pins `testDir` because the visual
-  container records `/work/tests` while host jobs record the runner path.
+  container records `/work/tests` while host jobs record the runner path. The
+  merged run also emits `merged.json` and `merged-junit.xml`.
+- **Quality Gate** reads every stage result, writes the job summary, and fails
+  when any stage did not succeed or when a required report is missing. The
+  summary lists passed/failed/flaky counts, failing tests with `file:line`,
+  stage, first error and trace availability, plus the Newman totals. Flaky
+  tests warn; visual diffs require human review. The written policy is
+  [`docs/quality-gates.md`](docs/quality-gates.md).
 - Each job removes the stack with `docker compose down -v` in an `always()`
   step. npm and Playwright browsers are cached; Docker layers are not shared
   between jobs, which is the main cost of the staged layout.
