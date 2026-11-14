@@ -78,6 +78,24 @@ export default defineConfig({
       use: { browserName: "chromium" },
     },
     {
+      // Cross-browser smoke only: the three @smoke tests on the engine, with
+      // no visual screenshots. Reusing the API-built storage state avoids a
+      // second login path and keeps the browser job focused on rendering and
+      // navigation behavior.
+      name: "firefox-smoke",
+      dependencies: ["setup"],
+      testIgnore: [/visual\//],
+      grep: /@smoke/,
+      use: { browserName: "firefox", storageState: authFile },
+    },
+    {
+      name: "webkit-smoke",
+      dependencies: ["setup"],
+      testIgnore: [/visual\//],
+      grep: /@smoke/,
+      use: { browserName: "webkit", storageState: authFile },
+    },
+    {
       // Kept out of every host-run project and executed by
       // `npm run test:visual` inside mcr.microsoft.com/playwright. It has no
       // setup dependency because visual tests do not reuse the auth file.
