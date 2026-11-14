@@ -64,9 +64,9 @@ failure, never an empty green summary.
 ### Gate job
 
 `Quality Gate` needs every stage plus `Merged Report`, runs with `if: always()`,
-installs no dependencies, and takes about 15 s. It fails when any needed stage
-is not `success`, when results are missing, or when the summary reports failed
-tests or failed requests. Flaky tests warn only.
+installs no dependencies, and took 8 s on the first green run. It fails when any
+needed stage is not `success`, when results are missing, or when the summary
+reports failed tests or failed requests. Flaky tests warn only.
 
 This closes the WP6 hole: a green `Merged Report` sitting on a red smoke stage
 now produces a red `Quality Gate`.
@@ -89,10 +89,11 @@ flakiness is recorded in the artifact and the annotation, not hidden.
 
 ### Cost
 
-One extra job (no `npm ci`, Node only) and small JUnit/JSON uploads per stage.
-The expected cost is roughly 0.3 runner-minutes per run plus a few seconds per
-stage; the actual numbers are recorded after the first CI run rather than
-guessed.
+One extra job (no `npm ci`, Node only, 8 s measured) and small JUnit/JSON
+uploads per stage. The green WP7 run summed 439 s of job time against 480 s for
+the WP6 post-merge `main` run; the difference is run-to-run variance in the
+stack builds, not a saving. Billable minutes remain dominated by the per-stage
+Docker builds, as in WP6.
 
 ## Trade-offs
 
@@ -131,8 +132,19 @@ Local verification before the first push:
 | Summary with missing inputs | exit 1, explicit gate reasons |
 | Workflow YAML | parses; 8 jobs; gate env and artifact names verified |
 
-CI evidence (green run, summary artifact, intentional failure, flaky warning) is
-recorded in `docs/progress.md` and `docs/metrics.md` after the branch is pushed.
+CI evidence:
+
+- Green run [`43552638345`](https://github.com/ifhamm/QA-Assessment/actions/runs/43552638345)
+  — 2 m 44 s wall, 439 s summed job time, `Quality Gate` 8 s; summary 9 passed /
+  0 failed / 0 flaky; 15 requests, 53 assertions.
+- Intentional failure [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095)
+  — smoke and gate red, merged report still green; summary names the probe,
+  stage `smoke`, 2 attempts, trace yes.
+- Flaky warning [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227)
+  — green with a `##[warning]` annotation and a flaky row attributed to
+  `regression-1`.
+- Post-revert green [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785)
+  — 2 m 43 s wall, all 8 jobs green. The probe files are not in the branch.
 
 ## How to verify
 

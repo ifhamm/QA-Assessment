@@ -9,8 +9,8 @@ tests and artifact links, and the gate fails whenever any stage did not succeed
 red stage. Flaky tests warn; visual diffs still require human review. The rules
 are written down in `docs/quality-gates.md`.
 
-Implementation is local-verified; the CI evidence rows below are filled from the
-first branch run and the intentional-failure/flaky experiments.
+Implementation is complete and CI-evidenced: a green run, a deliberate smoke
+failure, a flaky-warning run, and a post-revert green run are linked below.
 
 ## Why
 
@@ -74,14 +74,16 @@ uploaded with `if: always()` so a red stage keeps its evidence.
 | Summary, clean fixture | exit 0; verdict pass |
 | Summary, missing inputs | exit 1; explicit reasons |
 | Workflow YAML | parses; 8 jobs; artifact names verified |
-| Green branch run | _filled after push_ |
-| Job summary artifact | _filled after push_ |
-| Intentional failure run | _filled after push_ |
-| Flaky warning run | _filled after push_ |
+| Green branch run | [`43552638345`](https://github.com/ifhamm/QA-Assessment/actions/runs/43552638345) — success, 2 m 44 s wall, gate 8 s |
+| Job summary artifact | `summary` downloaded: 9 passed / 0 failed / 0 flaky; 15 requests, 53 assertions; committed as [`wp7-green-summary.md`](evidence/wp7-green-summary.md) |
+| Intentional failure run | [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095) — smoke + gate red, merged report green, trace yes |
+| Flaky warning run | [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227) — green, `##[warning]`, `regression-1` |
+| Post-revert green run | [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785) — success |
 
-Cost, recorded honestly after the first run: one extra ~15 s job and small
-JUnit/JSON uploads per stage. Sharding defaults and retry/assertion/timeout
-settings are unchanged.
+Cost, recorded from the runs: the gate job takes 8 s and the green run summed
+439 s of job time against 480 s for WP6's post-merge `main` run. That is
+variance in the stack builds, not a saving. Sharding defaults and
+retry/assertion/timeout settings are unchanged.
 
 ## How to verify
 
@@ -114,7 +116,7 @@ trace. For the deliberate failure path, follow the run link recorded in
 
 ## Open questions
 
-- Should the summary screenshot be committed under `docs/evidence/`, or is the
-  run link plus the summary markdown artifact enough? WP5 committed the diff
-  images; this PR commits the summary markdown and links the run until the owner
-  captures a screenshot.
+- **Screenshot (owner).** GitHub does not render step summaries to anonymous
+  sessions, so the three `summary` artifacts are committed as Markdown under
+  `docs/evidence/`. A screenshot of the summary from a logged-in session is the
+  remaining PRD evidence item; everything else is linked to a run.

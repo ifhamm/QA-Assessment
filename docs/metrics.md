@@ -586,7 +586,7 @@ Local runs: Windows 11, Node 24.13.0, Playwright 1.63.0.
 | Gate enforcement | implicit in job failure; report job green over red stages | `Quality Gate` reads every `needs.*.result`; missing data fails |
 | Flaky visibility | retry visible in logs only | summary table + `::warning` annotation, still non-blocking |
 | Written policy | none | `docs/quality-gates.md` |
-| Extra CI cost | — | one Node-only gate job (~15 s) plus small JUnit/JSON uploads |
+| Extra CI cost | one Node-only gate job (8 s measured) plus small JUnit/JSON uploads |
 
 ### Local verification
 
@@ -607,8 +607,14 @@ synthetic Newman report with one failed request.
 
 ### CI
 
-_Filled after the branch is pushed: green run, summary artifact, intentional
-failure run, and flaky-warning run._
+| Evidence | Run | Result |
+| --- | --- | --- |
+| Green, 1 shard | [`43552638345`](https://github.com/ifhamm/QA-Assessment/actions/runs/43552638345) | success, 2 m 44 s wall, 439 s summed job time, `Quality Gate` 8 s; summary 9 passed, 0 failed, 0 flaky; 15 requests / 53 assertions |
+| Intentional smoke failure | [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095) | `UI Smoke` and `Quality Gate` failure; `Merged Report` success, proving the WP6 hole is now caught; summary names the test at `tests/ui/wp7-intentional-failure.spec.ts:6`, stage `smoke`, 2 attempts, trace yes; verdict blocked |
+| Flaky retry | [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227) | success with `##[warning]` annotation; flaky row at `tests/ui/wp7-flaky-probe.spec.ts:5`, stage `regression-1`, 2 attempts; verdict pass with warnings |
+| Post-revert green | [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785) | success, 2 m 43 s wall, all 8 jobs |
+
+The probe files were added in one commit and reverted immediately; they are not in the branch. Cost comparison: the WP6 post-merge `main` run summed 480 s of job time, this WP7 run 439 s. The gate job adds 8 s; the difference is run-to-run variance in the stack builds, not a saving. Billable minutes are dominated by the per-stage Docker builds, as in WP6.
 
 ## Reporting quality
 
