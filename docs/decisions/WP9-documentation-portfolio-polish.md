@@ -78,6 +78,11 @@ CI runs the full eight-job pipeline on the PR; the PR run
 was green in 2 m 49 s (459 s summed job time, `Quality Gate` 12 s). The PR run
 link is also recorded in `docs/progress.md` and the PR body.
 
+Merged as `0736f7c` via PR [#12](https://github.com/ifhamm/QA-Assessment/pull/12)
+on 2026-11-14; the post-merge `main` run
+[`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444)
+is green in 2 m 49 s with `Quality Gate` at 7 s.
+
 ## Trade-offs and risks
 
 - **Breadth over depth at the top.** The README now answers "what is this and
