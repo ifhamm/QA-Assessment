@@ -571,26 +571,75 @@ stage rebuilds the stack. Keep the stages for isolation and future growth,
 keep one shard by default, and enable sharding when the regression stage
 outgrows shard startup.
 
+## WP7 - Reporting & Quality Gates (2026-11-14)
+
+Branch `wp7/reporting-quality-gates`, base `main` at `851afbd` (WP6 merge).
+Local runs: Windows 11, Node 24.13.0, Playwright 1.63.0.
+
+### Before / after
+
+| Aspect | Before WP7 | After WP7 |
+| --- | --- | --- |
+| Report formats | merged HTML + blobs | merged HTML + JUnit + JSON, per stage and merged |
+| Failure discovery | open each job log | one job summary with counts, failing tests, stage, error, trace availability |
+| API results in reporting | separate job log only | Newman JSON in the summary and `api-results` artifact |
+| Gate enforcement | implicit in job failure; report job green over red stages | `Quality Gate` reads every `needs.*.result`; missing data fails |
+| Flaky visibility | retry visible in logs only | summary table + `::warning` annotation, still non-blocking |
+| Written policy | none | `docs/quality-gates.md` |
+| Extra CI cost | one Node-only gate job (8 s measured) plus small JUnit/JSON uploads |
+
+### Local verification
+
+Parser fixtures, not application tests: a four-test probe produced 1 passed,
+1 flaky (failed attempt 1, passed attempt 2), 1 skipped, 1 failed, plus a
+synthetic Newman report with one failed request.
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck` | exit 0 |
+| `npm run lint` | exit 0 |
+| `npm run check:tags` | 3 `@smoke`, 3 `@regression`, 2 visual |
+| `merge-reports` with HTML/JUnit/JSON | `index.html`, `merged.json`, `merged-junit.xml` produced |
+| Summary, failing fixture | exit 1; failure table, flaky table, Newman failure, gate reasons correct |
+| Summary, clean fixture | exit 0; verdict pass |
+| Summary, missing inputs | exit 1 with explicit reasons |
+| Workflow YAML | parses; 8 jobs; gate env and artifact names verified |
+
+### CI
+
+| Evidence | Run | Result |
+| --- | --- | --- |
+| Green, 1 shard | [`43552638345`](https://github.com/ifhamm/QA-Assessment/actions/runs/43552638345) | success, 2 m 44 s wall, 439 s summed job time, `Quality Gate` 8 s; summary 9 passed, 0 failed, 0 flaky; 15 requests / 53 assertions |
+| Intentional smoke failure | [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095) | `UI Smoke` and `Quality Gate` failure; `Merged Report` success, proving the WP6 hole is now caught; summary names the test at `tests/ui/wp7-intentional-failure.spec.ts:6`, stage `smoke`, 2 attempts, trace yes; verdict blocked |
+| Flaky retry | [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227) | success with `##[warning]` annotation; flaky row at `tests/ui/wp7-flaky-probe.spec.ts:5`, stage `regression-1`, 2 attempts; verdict pass with warnings |
+| Post-revert green | [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785) | success, 2 m 43 s wall, all 8 jobs |
+
+The probe files were added in one commit and reverted immediately; they are not in the branch. Cost comparison: the WP6 post-merge `main` run summed 480 s of job time, this WP7 run 439 s. The gate job adds 8 s; the difference is run-to-run variance in the stack builds, not a saving. Billable minutes are dominated by the per-stage Docker builds, as in WP6.
+
 ## Reporting quality
 
 | Metric | Baseline |
 | --- | --- |
-| Reporters | Local `html`; CI `blob` + `line`; merged `html` |
+| Reporters | Local `html`; CI `blob` + `line` + `junit` + `json`; merged `html` + `list` + `junit` + `json` |
 | Local HTML | `playwright-report/index.html` |
 | Trace | Local `retain-on-failure`; CI `on-first-retry` |
 | Screenshot | `only-on-failure` |
 | Retries | 0 locally; 1 in CI |
 | Workers | 4, `fullyParallel: true` |
 | Video | No |
-| JUnit / JSON | No (WP7) |
-| Job summary | No (WP7) |
-| CI artifact | `merged-report`, `blob-report-*`, traces per failed stage, `visual-diffs` on visual failure; 7-day retention |
+| JUnit / JSON | Yes (WP7); per stage and merged |
+| Job summary | Yes (WP7); `Quality Gate` job |
+| CI artifact | `merged-report`, `merged-results`, `results-*`, `api-results`, `summary`, traces per failed stage, `visual-diffs` on visual failure; 7-day retention |
 
 **Qualitative:** better than a bare console. A failure leaves a screenshot,
-error context, and (on failure) a trace. The merged report now contains every
-stage in one artifact, including the container-rendered visual tests. There is
-still no JUnit output, no job summary, and no direct link from a CI summary to
-a trace; those remain WP7's quality-gate scope.
+error context, and (on failure) a trace. The merged report contains every stage
+in one artifact, including the container-rendered visual tests, and `Quality
+Gate` turns the run into one summary: counts, failing tests with stage,
+`file:line`, first error and trace availability, plus the Newman totals. Flaky
+tests are listed and annotated instead of disappearing into a green retry.
+JUnit/JSON artifacts cover CI consumers that cannot read a blob. The remaining
+gap is link depth: the summary points at artifacts, not at a hosted trace URL,
+so triage is summary → artifact → report → trace rather than a single deep link.
 
 ## Tooling health
 
@@ -602,6 +651,7 @@ a trace; those remain WP7's quality-gate scope.
 | Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env, 7 host tests |
 | API script | `npm run test:api` | Present (public demo) |
 | Local API script | `npm run test:api:local` | Present (self-hosted `localhost:3000`) |
+| Local API + JSON report | `npm run test:api:local:ci` | Present; adds Newman JSON for the summary |
 | Stack scripts | `npm run stack:up`, `npm run stack:down` | Present; `down` removes the disposable SQLite data |
 | UI script | `npm run test:ui` | Present; runs `tests/ui` (functional + dashboard). `test:ui:functional` runs functional only. |
 | Cross-layer script | `npm run test:cross` | Present |
@@ -609,7 +659,8 @@ a trace; those remain WP7's quality-gate scope.
 | Smoke script | `npm run test:smoke` | Present; runs the 3 `@smoke` host tests plus setup |
 | Regression script | `npm run test:regression` | Present; runs the 3 `@regression` host tests with `--no-deps` |
 | Tag check | `npm run check:tags` | Pass; 3 `@smoke`, 3 `@regression`, 2 visual |
-| Merged report | `npm run report:merge` | Present; merges blob reports with `playwright.merge.config.ts` |
+| Merged report | `npm run report:merge` | Present; merges blob reports with `playwright.merge.config.ts` (HTML + JUnit + JSON) |
+| CI summary | `npm run ci:summary` | Present; builds the job summary and evaluates gates locally |
 | Performance script | `cd performance && npm run test:perf` | Present |
 | Lint | `npm run lint` | Pass (exit 0); ESLint 10 + `typescript-eslint` 8 |
 
@@ -620,3 +671,5 @@ a trace; those remain WP7's quality-gate scope.
 - WP4 decision note: [`docs/decisions/WP4-parallelism-reliability.md`](decisions/WP4-parallelism-reliability.md)
 - WP5 decision note: [`docs/decisions/WP5-visual-linux-ci.md`](decisions/WP5-visual-linux-ci.md)
 - WP6 decision note: [`docs/decisions/WP6-staged-ci-sharding.md`](decisions/WP6-staged-ci-sharding.md)
+- WP7 decision note: [`docs/decisions/WP7-reporting-quality-gates.md`](decisions/WP7-reporting-quality-gates.md)
+- Quality gate policy: [`docs/quality-gates.md`](quality-gates.md)

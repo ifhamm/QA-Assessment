@@ -74,8 +74,20 @@ jobs:
       - name: Start self-hosted API
         run: docker compose up -d --build --wait api
 
+      - name: Prepare results directory
+        run: mkdir -p test-results
+
       - name: Run API tests
-        run: npm run test:api:local
+        run: npm run test:api:local:ci
+
+      - name: Upload API results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-results
+          path: test-results/newman.json
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Stop stack
         if: always()
@@ -141,6 +153,17 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-smoke
+          path: |
+            test-results/junit.xml
+            test-results/results.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Upload smoke traces
         if: failure()
         uses: actions/upload-artifact@v4
@@ -200,6 +223,17 @@ jobs:
         with:
           name: blob-report-regression-${{ matrix.shard }}
           path: blob-report/regression-${{ matrix.shard }}
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload regression results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-regression-${{ matrix.shard }}
+          path: |
+            test-results/junit.xml
+            test-results/results.json
           retention-days: 7
           if-no-files-found: warn
 
@@ -265,6 +299,17 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
+      - name: Upload visual results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-visual
+          path: |
+            test-results/junit.xml
+            test-results/results.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Stop stack
         if: always()
         run: docker compose --profile visual down -v --remove-orphans
@@ -310,7 +355,8 @@ jobs:
 
       - name: Merge reports
         if: ${{ hashFiles('merged-blobs/*.zip') != '' }}
-        run: npx playwright merge-reports -c playwright.merge.config.ts --reporter=html,list merged-blobs
+        # Reporters (HTML, JUnit, JSON) live in playwright.merge.config.ts.
+        run: npx playwright merge-reports -c playwright.merge.config.ts merged-blobs
 
       - name: Verify merged report
         run: test -f playwright-report/index.html
@@ -321,5 +367,73 @@ jobs:
         with:
           name: merged-report
           path: playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload merged results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-results
+          path: |
+            test-results/merged.json
+            test-results/merged-junit.xml
+          retention-days: 7
+          if-no-files-found: warn
+
+  quality-gate:
+    name: Quality Gate
+    needs: [static, api-tests, ui-smoke, ui-regression, visual-tests, report]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download merged results
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: merged-results
+          path: gate-results/merged
+
+      - name: Download API results
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: api-results
+          path: gate-results/api
+
+      - name: Download stage results
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          path: gate-results/stages
+
+      - name: Build summary and evaluate gates
+        env:
+          GATE_RESULTS: static=${{ needs.static.result }},api=${{ needs['api-tests'].result }},smoke=${{ needs['ui-smoke'].result }},regression=${{ needs['ui-regression'].result }},visual=${{ needs['visual-tests'].result }},report=${{ needs.report.result }}
+        run: |
+          node scripts/ci-summary.mjs \
+            --playwright gate-results/merged/merged.json \
+            --newman gate-results/api/newman.json \
+            --stages-dir gate-results/stages \
+            --gates "$GATE_RESULTS" \
+            --out summary.md
+
+      - name: Upload summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: summary
+          path: summary.md
           retention-days: 7
           if-no-files-found: warn
