@@ -87,9 +87,10 @@ was relaxed; the incident is recorded here rather than hidden.
 
 ## Trade-offs and risks
 
-- **Cost.** Two extra parallel jobs each build the stack. Wall time should stay
-  flat; summed runner-minutes rise by roughly two stack builds. The measured CI
-  numbers are in `docs/metrics.md` once the PR run completes.
+- **Cost.** Two extra parallel jobs each build the stack. Two browser stack
+  builds and the extra merged results raised summed runner time from 463 s to
+  712 s (+249 s) while wall time stayed flat (169 s to 178 s, +9 s). This is the
+  measured cost in the PR run; it is recorded in `docs/metrics.md`.
 - **WebKit on Linux.** The CI job installs WebKit with `--with-deps`; the host
   probe used the Windows WebKit build. Both exercise the same project and the
   same assertions, but the CI run is the authoritative image.

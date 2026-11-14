@@ -52,6 +52,16 @@ gaps left by WP2/WP3 without re-testing behavior that was already covered.
 | Cross-browser `--repeat-each=10` | 61/61 |
 | `npm run test:api:local` | 17 requests / 57 assertions, 0 failed |
 
+### CI evidence
+
+| Run | Result |
+| --- | --- |
+| PR run [`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626) | green; 2 m 58 s wall, 712 s summed, `Quality Gate` 7 s; 22 merged Playwright results (0 failed, 0 flaky); `browser` stage `success` |
+
+The browser legs took 122 s (Firefox) and 110 s (WebKit), next to UI Smoke at
+114 s. Wall time moved from 169 s to 178 s; summed runner time rose from 463 s to
+712 s for the two extra stack builds.
+
 One cold full-suite run failed the registration-gating assertion while the host
 was still busy with the preceding browser workload; it did not reproduce in the
 next run or in 150 consecutive retry-free repeats. No timeout, sleep, or
@@ -60,8 +70,7 @@ assertion was relaxed. The incident is recorded in the decision note.
 ### Risks
 
 - Two extra parallel jobs add roughly two stack builds of runner-minutes; wall
-  time should stay flat. The measured CI numbers will be added to
-  `docs/metrics.md` after the run.
+  time stayed flat in the PR run. The measured numbers are in `docs/metrics.md`.
 - WebKit is installed with `--with-deps` on `ubuntu-latest`; the local probe
-  used the Windows build. The CI run is the authoritative image.
+  used the Windows build. The PR run confirms the Linux image.
 - Visual baselines remain Chromium-only by design.

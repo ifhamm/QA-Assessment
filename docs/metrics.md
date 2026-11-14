@@ -692,13 +692,15 @@ decision note records it.
 
 | Evidence | Run | Result |
 | --- | --- | --- |
-| PR run | pending | pending |
+| PR run | [`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626) | green; 2 m 58 s wall, 712 s summed, `Quality Gate` 7 s; 22 merged Playwright results (0 failed, 0 flaky); Newman 17/57 |
 | Post-merge `main` | pending | pending |
 
-The `browser` stage is aggregated from the Firefox and WebKit matrix legs, and
-its result is part of `Quality Gate`. Blob artifacts are
-`blob-report-browser-firefox` and `blob-report-browser-webkit`; they merge into
-the same HTML/JUnit/JSON report as the Chromium stages.
+The browser legs took 122 s (Firefox) and 110 s (WebKit), in line with UI Smoke
+at 114 s. Against the WP9 baseline (169 s wall, 463 s summed), wall time moved
+by +9 s while summed runner time rose by 249 s: the price of two extra stack
+builds that run in parallel. The merged report contains all three setup runs and
+all browser projects; the `summary` artifact shows the `browser` stage as
+`success` between `visual` and `report`.
 
 ## Reporting quality
 
