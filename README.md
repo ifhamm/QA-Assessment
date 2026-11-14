@@ -24,7 +24,7 @@ The Newman regression suite runs separately with `npm run test:api:local`. Full 
 | Host Playwright runs | 7 (3 `@smoke`, 3 `@regression`, 1 setup) |
 | Visual regression | 2 tests, Linux-container baselines |
 | Optional performance | 1 k6 scenario, 150 iterations, 300 checks |
-| CI | 8 jobs; latest green `main` run 2 m 56 s |
+| CI | 8 jobs; latest green `main` run 2 m 49 s |
 | Stability evidence | 10 consecutive 4-worker runs, retries 0; 41/41 repeats |
 | Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate` |
 
@@ -394,12 +394,12 @@ Measured in WP0 and re-measured after each work package; the full tables and run
 | Workers / retries | 1 worker, no `fullyParallel` | 4 workers, `fullyParallel`; retries 0 locally, 1 in CI as a safety net |
 | UI logins per full run | 5 successful (+1 invalid) | 1 successful (+1 invalid) |
 | Visual tests in CI | no; Windows-only baselines | yes; pinned Linux container, separate job |
-| CI pipeline | 2 flat jobs; red on `main` | 8 staged jobs + merged report + `Quality Gate`; latest green run 2 m 56 s |
+| CI pipeline | 2 flat jobs; red on `main` | 8 staged jobs + merged report + `Quality Gate`; latest green run 2 m 49 s |
 | Reports | HTML only | merged HTML + JUnit + JSON, job summary |
 | Flaky visibility | hidden by retries | listed and annotated in the summary; still non-blocking |
 | Stability evidence | none with >1 worker | 10 consecutive 4-worker runs (retries 0); 41/41 repeat probe |
 
-Latest green `main` run [`43562094955`](https://github.com/ifhamm/QA-Assessment/actions/runs/43562094955) (commit `05b4497`, docs merge): 2 m 56 s wall and 458 s summed job time. WP7's merge run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) records the gate at 11 s.
+Latest green `main` run [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) (commit `0736f7c`, WP9 merge): 2 m 49 s wall and 463 s summed job time. WP7's merge run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) records the gate at 11 s.
 
 ## CI Pipeline and Report
 

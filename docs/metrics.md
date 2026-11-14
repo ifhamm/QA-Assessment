@@ -101,20 +101,22 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) |
-| Commit | `5733ee4` (WP7 merge) |
+| Run | [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) |
+| Commit | `0736f7c` (WP9 merge) |
 | Event | push |
 | Conclusion | **success** |
-| Overall wall | 3 m 05 s |
-| Jobs | 8: Plan 2 s, Static 18 s, Smoke 1 m 50 s, Regression 2 m 10 s, Visual 2 m 00 s, API 1 m 31 s, Merged Report 13 s, Quality Gate 11 s |
-| Summed job time | 8.25 runner-minutes (WP6 post-merge: 8.0; flat pre-WP6 baseline: 4.9) |
+| Overall wall | 2 m 49 s |
+| Jobs | 8: Plan 2 s, Static 10 s, Smoke 2 m 02 s, Regression 1 m 47 s, Visual 1 m 56 s, API 1 m 22 s, Merged Report 17 s, Quality Gate 7 s |
+| Summed job time | 7.72 runner-minutes (WP7 post-merge: 8.25; flat pre-WP6 baseline: 4.9) |
 | Reports | `merged-report` 202.8 KB, `merged-results` (JUnit + JSON), `summary`, plus `blob-report-*` and per-stage results |
 
 The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
-The latest green run is the WP7 merge run above. WP7's PR run
+The latest green run is the WP9 merge run above. WP9's PR run
+([`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950))
+was green in 2 m 49 s, WP7's PR run
 ([`43554365923`](https://github.com/ifhamm/QA-Assessment/actions/runs/43554365923))
-was green on the merged tree, and the WP6 PR run
+was green on its merged tree, and the WP6 PR run
 ([`43549808250`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549808250))
 was green in 3 m 13 s. Earlier WP4/WP5 flat-workflow runs remain in their
 sections for history.
@@ -546,6 +548,7 @@ wall, 14.0–14.6 s Playwright, 4 passed. Visual: 2 passed in 3.3 s.
 | PR run, 1 shard (WP6 merge) | [`43549808250`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549808250) | 3 m 13 s | 8.2 | Yes |
 | Post-merge `main`, 1 shard | [`43549955277`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549955277) | 3 m 10 s | 8.0 | 202.8 KB |
 | Post-merge `main`, 1 shard (WP7 merge) | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) | 3 m 05 s | 8.25 | 202.8 KB |
+| Post-merge `main`, 1 shard (WP9 merge) | [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) | 2 m 49 s | 7.72 | 202.8 KB |
 
 Wall time includes hosted-runner queueing and varies between otherwise identical
 runs: the final docs-only run
@@ -626,6 +629,29 @@ synthetic Newman report with one failed request.
 | Post-merge `main` | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) | success, 3 m 05 s wall, 495 s summed job time, `Quality Gate` 11 s, all 8 jobs |
 
 The probe files were added in one commit and reverted immediately; they are not in the branch. Cost comparison: the WP6 post-merge `main` run summed 480 s of job time, this WP7 run 439 s, and the WP7 post-merge `main` run 495 s. The gate job adds 8–11 s; the rest is run-to-run variance in the stack builds. Billable minutes are dominated by the per-stage Docker builds, as in WP6.
+
+## WP9 - Documentation & Portfolio Polish (2026-11-14)
+
+Docs-only; no test, workflow, or runtime change.
+
+### Before / after
+
+| Aspect | Before WP9 | After WP9 |
+| --- | --- | --- |
+| README top | background, then prerequisites | CI badge, results summary, quickstart, architecture diagram, before/after metrics |
+| Documentation navigation | browse the directory | [`docs/README.md`](README.md) index across PRD, progress, metrics, policy, audit, decisions, PR bodies, and evidence |
+| Project tree | last completed in WP0 | includes fixtures, auth setup, dashboard, CI summary script, and the docs index |
+| Repository About | empty | description plus 14 topics |
+| Claim verification | manual | counts, links, and anchors checked mechanically: 15/53 Newman, 9 Playwright tests in 6 files, 99 relative links |
+
+### CI
+
+| Evidence | Run | Result |
+| --- | --- | --- |
+| PR run | [`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950) | success, 2 m 49 s wall, 459 s summed job time, `Quality Gate` 12 s, all 8 jobs |
+| Post-merge `main` | [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) | success on `0736f7c`, 2 m 49 s wall, 463 s summed job time, `Quality Gate` 7 s, all 8 jobs |
+
+The pipeline cost is within the WP7 range; the documentation did not change the workflow. Runner-minutes are the sum of job durations; GitHub bills per-job minutes rounded up.
 
 ## Reporting quality
 
