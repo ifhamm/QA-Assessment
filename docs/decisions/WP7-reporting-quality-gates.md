@@ -145,6 +145,10 @@ CI evidence:
   `regression-1`.
 - Post-revert green [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785)
   — 2 m 43 s wall, all 8 jobs green. The probe files are not in the branch.
+- Merged as `5733ee4` via PR [#11](https://github.com/ifhamm/QA-Assessment/pull/11)
+  on 2026-11-14; the post-merge `main` run
+  [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310)
+  is green in 3 m 05 s with `Quality Gate` at 11 s.
 
 ## How to verify
 

@@ -101,23 +101,23 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`41462400575`](https://github.com/ifhamm/QA-Assessment/actions/runs/41462400575) |
-| Commit | `494d243` (WP4 merge) |
+| Run | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) |
+| Commit | `5733ee4` (WP7 merge) |
 | Event | push |
 | Conclusion | **success** |
-| Overall wall | 2 m 04 s |
-| API job | success, 1 m 57 s |
-| Playwright job | success, 1 m 58 s |
-| Typecheck step | success |
-| UI tests step | success |
-| Cross-layer step | success |
-| HTML report artifact | uploaded |
+| Overall wall | 3 m 05 s |
+| Jobs | 8: Plan 2 s, Static 18 s, Smoke 1 m 50 s, Regression 2 m 10 s, Visual 2 m 00 s, API 1 m 31 s, Merged Report 13 s, Quality Gate 11 s |
+| Summed job time | 8.25 runner-minutes (WP6 post-merge: 8.0; flat pre-WP6 baseline: 4.9) |
+| Reports | `merged-report` 202.8 KB, `merged-results` (JUnit + JSON), `summary`, plus `blob-report-*` and per-stage results |
 
 The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
-The latest green run is the WP4 merge run above. The same tip also passed the PR
-run and the branch push run before the merge; see the WP4 section below for
-durations.
+The latest green run is the WP7 merge run above. WP7's PR run
+([`43554365923`](https://github.com/ifhamm/QA-Assessment/actions/runs/43554365923))
+was green on the merged tree, and the WP6 PR run
+([`43549808250`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549808250))
+was green in 3 m 13 s. Earlier WP4/WP5 flat-workflow runs remain in their
+sections for history.
 
 ### What runs in CI
 
@@ -125,17 +125,18 @@ durations.
 | --- | --- |
 | API (Newman) | Yes |
 | Typecheck | Yes |
+| Lint + tag check | Yes (from WP6) |
 | UI functional (3) | Yes |
 | Cross-layer (2) | Yes |
 | Dashboard (1) | Yes (from WP2; `test:ui` runs `tests/ui`) |
-| Visual (2) | **No** |
+| Visual (2) | Yes (from WP5, separate job) |
 | k6 (1 scenario) | **No** |
-| Merged report | No; HTML artifact only |
-| JUnit / job summary | No |
+| Merged report | Yes (from WP6); HTML plus JUnit and JSON across all stages |
+| JUnit / job summary | Yes (from WP7); JUnit/JSON per stage and a job summary |
 | Trace artifact | CI traces on the first retry, inside the HTML report artifact |
 
-Tests excluded from CI: visual and k6. The dashboard is included through
-`test:ui`. The WP4 workflow also starts the self-hosted stack in both jobs.
+Tests excluded from CI: k6 only. The dashboard is included through
+`test:ui`. Every CI job also builds the self-hosted stack.
 
 ## WP0 post-audit CI unblock (2026-10-29)
 
@@ -542,6 +543,9 @@ wall, 14.0–14.6 s Playwright, 4 passed. Visual: 2 passed in 3.3 s.
 | Flat 3 jobs, 4 workers (pre-WP6 `main`) | [`41469719183`](https://github.com/ifhamm/QA-Assessment/actions/runs/41469719183) | 2 m 09 s | 4.9 | No |
 | Staged, 1 shard | [`43435185236`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435185236) | 3 m 17 s | 8.7 | 203 KB |
 | Staged, 3 shards | [`43435791291`](https://github.com/ifhamm/QA-Assessment/actions/runs/43435791291) | 3 m 07 s | 12.1 | Yes |
+| PR run, 1 shard (WP6 merge) | [`43549808250`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549808250) | 3 m 13 s | 8.2 | Yes |
+| Post-merge `main`, 1 shard | [`43549955277`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549955277) | 3 m 10 s | 8.0 | 202.8 KB |
+| Post-merge `main`, 1 shard (WP7 merge) | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) | 3 m 05 s | 8.25 | 202.8 KB |
 
 Wall time includes hosted-runner queueing and varies between otherwise identical
 runs: the final docs-only run
@@ -569,7 +573,12 @@ cost 3.4 more runner-minutes. The staged split itself costs 3.8 more
 runner-minutes and 68 s more wall time than the flat workflow because every
 stage rebuilds the stack. Keep the stages for isolation and future growth,
 keep one shard by default, and enable sharding when the regression stage
-outgrows shard startup.
+outgrows shard startup. The post-merge `main` run reproduces the staged cost on
+the shipped tree (3 m 10 s, 8.0 summed job-minutes), so the conclusion is not an
+artifact of the branch runs. The WP7 post-merge run reproduces it again
+(3 m 05 s, 8.25 summed job-minutes) with `Quality Gate` included.
+Runner-minutes here are the sum of job durations;
+GitHub bills per-job minutes rounded up.
 
 ## WP7 - Reporting & Quality Gates (2026-11-14)
 
@@ -613,8 +622,10 @@ synthetic Newman report with one failed request.
 | Intentional smoke failure | [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095) | `UI Smoke` and `Quality Gate` failure; `Merged Report` success, proving the WP6 hole is now caught; summary names the test at `tests/ui/wp7-intentional-failure.spec.ts:6`, stage `smoke`, 2 attempts, trace yes; verdict blocked |
 | Flaky retry | [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227) | success with `##[warning]` annotation; flaky row at `tests/ui/wp7-flaky-probe.spec.ts:5`, stage `regression-1`, 2 attempts; verdict pass with warnings |
 | Post-revert green | [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785) | success, 2 m 43 s wall, all 8 jobs |
+| PR run | [`43554365923`](https://github.com/ifhamm/QA-Assessment/actions/runs/43554365923) | success on the merged tree, all 8 jobs |
+| Post-merge `main` | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) | success, 3 m 05 s wall, 495 s summed job time, `Quality Gate` 11 s, all 8 jobs |
 
-The probe files were added in one commit and reverted immediately; they are not in the branch. Cost comparison: the WP6 post-merge `main` run summed 480 s of job time, this WP7 run 439 s. The gate job adds 8 s; the difference is run-to-run variance in the stack builds, not a saving. Billable minutes are dominated by the per-stage Docker builds, as in WP6.
+The probe files were added in one commit and reverted immediately; they are not in the branch. Cost comparison: the WP6 post-merge `main` run summed 480 s of job time, this WP7 run 439 s, and the WP7 post-merge `main` run 495 s. The gate job adds 8–11 s; the rest is run-to-run variance in the stack builds. Billable minutes are dominated by the per-stage Docker builds, as in WP6.
 
 ## Reporting quality
 

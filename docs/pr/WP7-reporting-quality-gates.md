@@ -9,8 +9,9 @@ tests and artifact links, and the gate fails whenever any stage did not succeed
 red stage. Flaky tests warn; visual diffs still require human review. The rules
 are written down in `docs/quality-gates.md`.
 
-Implementation is complete and CI-evidenced: a green run, a deliberate smoke
-failure, a flaky-warning run, and a post-revert green run are linked below.
+Implementation is complete, merged, and CI-evidenced. The PR run and the
+post-merge `main` run are green; the deliberate smoke failure and the
+flaky-warning run are linked below.
 
 ## Why
 
@@ -79,11 +80,12 @@ uploaded with `if: always()` so a red stage keeps its evidence.
 | Intentional failure run | [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095) — smoke + gate red, merged report green, trace yes |
 | Flaky warning run | [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227) — green, `##[warning]`, `regression-1` |
 | Post-revert green run | [`43553744785`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553744785) — success |
+| PR run | [`43554365923`](https://github.com/ifhamm/QA-Assessment/actions/runs/43554365923) — success on the merged tree, all 8 jobs |
 
-Cost, recorded from the runs: the gate job takes 8 s and the green run summed
-439 s of job time against 480 s for WP6's post-merge `main` run. That is
-variance in the stack builds, not a saving. Sharding defaults and
-retry/assertion/timeout settings are unchanged.
+Cost, recorded from the runs: the gate job takes 8–11 s. The branch green run
+summed 439 s of job time and the post-merge `main` run 495 s, against 480 s for
+WP6's post-merge run. That is variance in the stack builds, not a saving.
+Sharding defaults and retry/assertion/timeout settings are unchanged.
 
 ## How to verify
 
