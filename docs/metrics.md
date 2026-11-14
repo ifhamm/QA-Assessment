@@ -653,6 +653,55 @@ Docs-only; no test, workflow, or runtime change.
 
 The pipeline cost is within the WP7 range; the documentation did not change the workflow. Runner-minutes are the sum of job durations; GitHub bills per-job minutes rounded up.
 
+## WP8 - Coverage Expansion (2026-11-14)
+
+Optional stretch package; the plan was approved on 2026-11-14.
+
+### Before / after
+
+| Aspect | Before WP8 | After WP8 |
+| --- | --- | --- |
+| Browser negatives | invalid credentials, protected editor route | plus registration gating, empty article, logout, invalid stored token, delete article |
+| API negatives | missing title, unauthorized update | plus duplicate registration, malformed token |
+| Browsers | Chromium only | Chromium + `@smoke` on Firefox and WebKit |
+| Playwright tests (definitions) | 9 (1 setup + 8 user-facing) | 14 (1 setup + 13 user-facing) |
+| Host tests | 7 | 12 |
+| `@smoke` / `@regression` / visual | 3 / 3 / 2 | 3 / 8 / 2 |
+| Newman requests / assertions | 15 / 53 | 17 / 57 |
+| CI jobs | 8 | 10 (browser smoke is a 2-engine matrix) |
+
+### Local evidence (retries 0)
+
+| Check | Result |
+| --- | --- |
+| `npm run typecheck`, `npm run lint` | exit 0 |
+| `npm run check:tags` | 9 `@smoke` listings (3 tests × 3 projects), 8 `@regression`, 2 visual |
+| New tests, `--repeat-each=10` | 50/50 passed |
+| New tests, `--repeat-each=20` | 100/100 passed |
+| Full suite, `npm run test:local` | 12/12 passed (12.3 s warm) |
+| Cross-browser smoke | 7/7 including setup (25.9 s) |
+| Cross-browser, `--repeat-each=10` | 61/61 including setup (2.8 min) |
+| `npm run test:api:local` | 17 requests / 57 assertions, 0 failed (2.9 s) |
+
+A single cold full-suite run failed the registration-gating test while the host
+was still busy with the preceding browser workload. It did not reproduce in the
+next run or in 150 retry-free repeats; no timeout or assertion was relaxed. The
+decision note records it.
+
+### CI
+
+| Evidence | Run | Result |
+| --- | --- | --- |
+| PR run | [`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626) | green; 2 m 58 s wall, 712 s summed, `Quality Gate` 7 s; 22 merged Playwright results (0 failed, 0 flaky); Newman 17/57 |
+| Post-merge `main` | pending | pending |
+
+The browser legs took 122 s (Firefox) and 110 s (WebKit), in line with UI Smoke
+at 114 s. Against the WP9 baseline (169 s wall, 463 s summed), wall time moved
+by +9 s while summed runner time rose by 249 s: the price of two extra stack
+builds that run in parallel. The merged report contains all three setup runs and
+all browser projects; the `summary` artifact shows the `browser` stage as
+`success` between `visual` and `report`.
+
 ## Reporting quality
 
 | Metric | Baseline |
@@ -683,9 +732,9 @@ so triage is summary → artifact → report → trace rather than a single deep
 | Check | Command | Result |
 | --- | --- | --- |
 | Typecheck | `npm run typecheck` | Pass (exit 0) |
-| Test discovery | `npx playwright test --list` | 9 tests in 6 files |
-| Default test script | `npm test` | Present; runs the 7 host tests and excludes the container-only visual project |
-| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env, 7 host tests |
+| Test discovery | `npx playwright test --list` | 14 test definitions in 7 files (20 project listings) |
+| Default test script | `npm test` | Present; runs the 12 host tests and excludes the container-only visual project |
+| Self-hosted test script | `npm run test:local` | Present; overrides target URLs and auth env, 12 host tests |
 | API script | `npm run test:api` | Present (public demo) |
 | Local API script | `npm run test:api:local` | Present (self-hosted `localhost:3000`) |
 | Local API + JSON report | `npm run test:api:local:ci` | Present; adds Newman JSON for the summary |
@@ -694,8 +743,9 @@ so triage is summary → artifact → report → trace rather than a single deep
 | Cross-layer script | `npm run test:cross` | Present |
 | Visual script | `npm run test:visual` | Present; runs the 2 visual tests in the pinned Playwright container |
 | Smoke script | `npm run test:smoke` | Present; runs the 3 `@smoke` host tests plus setup |
-| Regression script | `npm run test:regression` | Present; runs the 3 `@regression` host tests with `--no-deps` |
-| Tag check | `npm run check:tags` | Pass; 3 `@smoke`, 3 `@regression`, 2 visual |
+| Cross-browser script | `npm run test:browser:smoke` | Present; runs the 3 `@smoke` tests on Firefox and WebKit |
+| Regression script | `npm run test:regression` | Present; runs the 8 `@regression` host tests with `--no-deps` |
+| Tag check | `npm run check:tags` | Pass; 9 `@smoke` listings (3 tests × 3 projects), 8 `@regression`, 2 visual |
 | Merged report | `npm run report:merge` | Present; merges blob reports with `playwright.merge.config.ts` (HTML + JUnit + JSON) |
 | CI summary | `npm run ci:summary` | Present; builds the job summary and evaluates gates locally |
 | Performance script | `cd performance && npm run test:perf` | Present |

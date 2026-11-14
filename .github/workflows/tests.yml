@@ -177,6 +177,83 @@ jobs:
         if: always()
         run: npm run stack:down
 
+  browser-smoke:
+    # Cross-browser is a separate job so the Chromium stages keep their
+    # timings and the two engines can fail independently.
+    name: Browser Smoke (${{ matrix.browser }})
+    needs: static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright ${{ matrix.browser }}
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Start self-hosted RealWorld stack
+        run: npm run stack:up
+
+      # The setup project only uses the request fixture; no extra engine is
+      # needed for the API-created storage state.
+      - name: Run @smoke on ${{ matrix.browser }}
+        env:
+          PLAYWRIGHT_BLOB_OUTPUT_DIR: blob-report/browser-${{ matrix.browser }}
+        run: npx playwright test --project=${{ matrix.browser }}-smoke
+
+      - name: Upload browser blob report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-browser-${{ matrix.browser }}
+          path: blob-report/browser-${{ matrix.browser }}
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload browser results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-browser-${{ matrix.browser }}
+          path: |
+            test-results/junit.xml
+            test-results/results.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Upload browser traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-traces-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Stop stack
+        if: always()
+        run: npm run stack:down
+
   ui-regression:
     name: UI Regression (shard ${{ matrix.shard }}/${{ strategy.job-total }})
     needs: [static, plan-shards]
@@ -316,7 +393,7 @@ jobs:
 
   report:
     name: Merged Report
-    needs: [api-tests, ui-smoke, ui-regression, visual-tests]
+    needs: [api-tests, ui-smoke, ui-regression, visual-tests, browser-smoke]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -383,7 +460,7 @@ jobs:
 
   quality-gate:
     name: Quality Gate
-    needs: [static, api-tests, ui-smoke, ui-regression, visual-tests, report]
+    needs: [static, api-tests, ui-smoke, ui-regression, visual-tests, browser-smoke, report]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -420,7 +497,7 @@ jobs:
 
       - name: Build summary and evaluate gates
         env:
-          GATE_RESULTS: static=${{ needs.static.result }},api=${{ needs['api-tests'].result }},smoke=${{ needs['ui-smoke'].result }},regression=${{ needs['ui-regression'].result }},visual=${{ needs['visual-tests'].result }},report=${{ needs.report.result }}
+          GATE_RESULTS: static=${{ needs.static.result }},api=${{ needs['api-tests'].result }},smoke=${{ needs['ui-smoke'].result }},regression=${{ needs['ui-regression'].result }},visual=${{ needs['visual-tests'].result }},browser=${{ needs['browser-smoke'].result }},report=${{ needs.report.result }}
         run: |
           node scripts/ci-summary.mjs \
             --playwright gate-results/merged/merged.json \

@@ -13,6 +13,7 @@ gets from a red run to the failing artifact. WP7 implements this policy in
 | `UI Smoke` fails | run is red, traces and results uploaded | blocked |
 | `UI Regression` fails in any shard | that shard is red, other shards still run (`fail-fast: false`) | blocked |
 | `Visual Tests` diff | run is red, `visual-diffs` uploaded | blocked until a human reviews the diff |
+| `Browser Smoke` fails on either engine | that matrix leg is red, the other still runs (`fail-fast: false`) | blocked |
 | `Merged Report` fails or produces no `index.html` | run is red | blocked |
 | Any required stage report is missing | `Quality Gate` is red | blocked |
 
@@ -62,11 +63,11 @@ the gate was not enforced. Until the settings above exist, the gate is advisory.
 | Artifact | Contents |
 | --- | --- |
 | `summary` | Markdown copy of the job summary (counts, failures, flaky list) |
-| `merged-report` | One HTML report for smoke, regression shards, and visual; traces and screenshots embedded |
+| `merged-report` | One HTML report for smoke, browser smoke, regression shards, and visual; traces and screenshots embedded |
 | `merged-results` | Merged JSON + JUnit |
-| `results-smoke`, `results-regression-<n>`, `results-visual` | Per-stage JSON + JUnit |
+| `results-smoke`, `results-browser-<engine>`, `results-regression-<n>`, `results-visual` | Per-stage JSON + JUnit |
 | `api-results` | Newman JSON (requests, assertions, failures) |
-| `smoke-traces`, `regression-traces-<n>`, `visual-diffs` | Failure-only trace/diff bundles |
+| `smoke-traces`, `browser-traces-<engine>`, `regression-traces-<n>`, `visual-diffs` | Failure-only trace/diff bundles |
 
 Triage path: run summary → failing test row (stage, file:line, first error) →
 `merged-report` artifact → the test's trace. That is the acceptance bar: a
@@ -78,7 +79,9 @@ failure is identifiable without opening each stage log.
   failures. It treats a missing merged report or missing Newman report as a gate
   failure, so "no data" can never read as "green".
 - `playwright.merge.config.ts` emits HTML, JUnit, and JSON from the merged blobs.
-- `playwright.config.ts` emits JUnit and JSON next to the blob in CI stages.
+- `playwright.config.ts` emits JUnit and JSON next to the blob in CI stages. It
+  also defines the `firefox-smoke` and `webkit-smoke` projects; the workflow
+  adds their combined result as the `browser` stage in `GATE_RESULTS`.
 - Per-stage artifacts are uploaded with `if: always()` so a red stage keeps its
   evidence.
 

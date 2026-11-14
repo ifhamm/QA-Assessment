@@ -1187,6 +1187,91 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "Register Duplicate User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": "const json = pm.response.json();\r\n\r\npm.test(\"Duplicate registration returns 409\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"Duplicate registration reports both fields\", function () {\r\n    pm.expect(json.errors.email).to.be.an(\"array\").that.is.not.empty;\r\n    pm.expect(json.errors.username).to.be.an(\"array\").that.is.not.empty;\r\n});",
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user\": {\n    \"username\": \"{{ownerUsername}}\",\n    \"email\": \"{{ownerEmail}}\",\n    \"password\": \"{{password}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Reject Malformed Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": "const json = pm.response.json();\r\n\r\npm.test(\"Malformed token returns 401\", function () {\r\n    pm.response.to.have.status(401);\r\n});\r\n\r\npm.test(\"Malformed token error names the token\", function () {\r\n    pm.expect(json.errors.token).to.include(\"is invalid\");\r\n});",
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Token not-a-real-jwt",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/user",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "user"
+          ]
+        }
+      },
+      "response": []
     }
   ],
   "event": [
