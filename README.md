@@ -422,8 +422,9 @@ Latest green `main` run [`43637279395`](https://github.com/ifhamm/QA-Assessment/
 
 ## CI Pipeline and Report
 
-GitHub Actions runs on every push and pull request. The pipeline is staged so a
-cheap failure stops before any container build:
+GitHub Actions runs on every pull request and on pushes to `main`, so a branch
+commit produces one run instead of a duplicate push/PR pair. The pipeline is
+staged so a cheap failure stops before any container build:
 
 ```text
 Static Checks (typecheck, lint, tags) ─┬─ API Tests

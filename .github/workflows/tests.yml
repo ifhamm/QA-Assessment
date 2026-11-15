@@ -2,6 +2,7 @@ name: QA Automation Tests
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
     inputs:
@@ -18,7 +19,7 @@ env:
   BASE_URL: http://localhost:8081
   API_BASE_URL: http://localhost:8081/api
 
-# A new push to the same PR cancels the superseded run; pushes to main are
+# A new commit on a PR cancels the superseded run; pushes to main are
 # never cancelled so the recorded run always completes.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
