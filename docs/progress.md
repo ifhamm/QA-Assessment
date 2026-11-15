@@ -209,7 +209,7 @@ Last updated: 2026-11-15
 - `scripts/ci-summary.mjs` writes the job summary and evaluates gates. Any non-`success` stage, missing report, failed test, or failed Newman request blocks; flaky tests only warn.
 - Verified live: an intentional smoke failure turned `UI Smoke` and `Quality Gate` red while `Merged Report` stayed green, and a retry-only flaky test produced a `::warning` plus a summary row without failing the run.
 - Merged as `5733ee4` via PR [#11](https://github.com/ifhamm/QA-Assessment/pull/11) on 2026-11-14. The post-merge `main` run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) is green: 3 m 05 s wall, 495 s summed job time, `Quality Gate` 11 s, all eight jobs green.
-- Remaining: a logged-in screenshot of the summary and branch protection (blockers 7 and 9). Both are owner actions.
+- Remaining: branch protection (blocker 7). The logged-in summary screenshot is committed at [`docs/evidence/wp8-quality-gate-summary.png`](evidence/wp8-quality-gate-summary.png) (blocker 9, resolved).
 
 ## WP9 summary
 
@@ -217,7 +217,7 @@ Last updated: 2026-11-15
 - `docs/README.md` indexes the PRD, progress, metrics, quality gates, audit, every decision note and PR body, and the evidence files. `docs/audit.md` records that the stale CI link and incomplete tree were fixed.
 - Counts were verified mechanically, not recalled: 15 Newman requests / 53 assertions, 9 Playwright tests in 6 files, 3 `@smoke` + 3 `@regression` + 2 visual, 8 CI jobs; all 99 relative links and anchors resolve.
 - Merged as `0736f7c` via PR [#12](https://github.com/ifhamm/QA-Assessment/pull/12) on 2026-11-14. PR run [`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950) and post-merge `main` run [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) are green; the post-merge run took 2 m 49 s with `Quality Gate` at 7 s.
-- Repository About set through the API: description plus 14 topics. The only WP9 follow-ups are the two owner actions (branch protection and the summary screenshot).
+- Repository About set through the API: description plus 14 topics. The only WP9 follow-up still open is branch protection; the logged-in summary screenshot is committed.
 
 ## WP8 summary
 
@@ -238,4 +238,4 @@ Last updated: 2026-11-15
 6. **WP7 CI evidence (resolved).** The green run, `summary` artifact, intentional-failure run, flaky-warning run, and post-revert green run are recorded in `docs/metrics.md` and above. PR [#11](https://github.com/ifhamm/QA-Assessment/pull/11) merged as `5733ee4`, and the post-merge `main` run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) is green.
 7. **Branch protection (owner).** Require `Static Checks` and `Quality Gate`, require up-to-date branches, and block direct pushes to `main`; a workflow cannot enforce this. PR #9 merged 102 s after opening, before its check finished, and WP7 exists to make that failure visible. Record the setting in this file once applied.
 8. **Rebase ordering (resolved).** WP7 merged before the WP6 docs follow-up, so the shared `progress.md`/`metrics.md` sections were reconciled in PR [#10](https://github.com/ifhamm/QA-Assessment/pull/10) instead of a branch rebase.
-9. **Job summary screenshot (owner).** GitHub does not render step summaries to anonymous sessions, so the three `summary` artifacts are committed as Markdown under `docs/evidence/`. A screenshot from a logged-in session is still needed; save it under `docs/evidence/` in a follow-up PR, or attach it to a new issue.
+9. **Job summary screenshot (resolved).** GitHub does not render step summaries to anonymous sessions, so the three `summary` artifacts are committed as Markdown under `docs/evidence/`. The owner-provided logged-in screenshot is committed as [`docs/evidence/wp8-quality-gate-summary.png`](evidence/wp8-quality-gate-summary.png) and indexed in [`docs/README.md`](README.md).
