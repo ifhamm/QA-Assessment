@@ -105,8 +105,10 @@ Docker builds, as in WP6.
 - Link depth stops at summary → artifact → report → trace. Hosting the report
   would need GitHub Pages or an external service; that is not worth the surface
   for this repository.
-- The gate is advisory until branch protection is enabled. That is an owner
-  setting, not something the workflow can enforce.
+- The gate was advisory until branch protection was enabled. That is an owner
+  setting, not something the workflow can enforce. **Update 2026-11-15:** the
+  `main-protection` ruleset requires the checks on an up-to-date branch, so the
+  gate is now enforced.
 
 ## Risks
 

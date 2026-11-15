@@ -17,7 +17,8 @@ gets from a red run to the failing artifact. WP7 implements this policy in
 | `Merged Report` fails or produces no `index.html` | run is red | blocked |
 | Any required stage report is missing | `Quality Gate` is red | blocked |
 
-`Quality Gate` is the single check to require in branch protection. It reads
+`Quality Gate` aggregates the test stages and is the check that encodes the
+policy. Branch protection requires it together with `Static Checks`. It reads
 `needs.*.result` for every stage and fails when any stage is not `success`, so a
 green report job can no longer sit on top of a red stage. Flaky tests do not
 fail it; everything else does.
@@ -45,18 +46,20 @@ and decides:
 2. the change is unintended → fix the UI or the test; never widen the threshold
    to get green.
 
-## Branch protection (owner action)
+## Branch protection (active)
 
-The workflow can fail, but only branch protection can stop a merge. The owner
-should configure, in repository settings:
+The workflow can fail, but only branch protection can stop a merge. The active
+`main-protection` ruleset (verified 2026-11-15) applies to the default branch:
 
-- required status checks: `Static Checks` and `Quality Gate`;
-- "Require branches to be up to date before merging";
-- no bypass for direct pushes to `main`.
+- required status checks: `Static Checks` and `Quality Gate`, with "Require
+  branches to be up to date before merging";
+- pull requests required, with conversation resolution;
+- force pushes and branch deletion blocked;
+- no bypass actors, so direct pushes to `main` are rejected for admins too.
 
 PR #9 is the cautionary example: it was merged 102 seconds after opening, before
 its check run finished. The check passed afterwards and `main` stayed green, but
-the gate was not enforced. Until the settings above exist, the gate is advisory.
+the gate was not enforced. The ruleset now blocks that path.
 
 ## Where to look
 

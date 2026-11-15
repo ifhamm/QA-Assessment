@@ -126,6 +126,12 @@ was green on its merged tree, and the WP6 PR run
 was green in 3 m 13 s. Earlier WP4/WP5 flat-workflow runs remain in their
 sections for history.
 
+**Merge enforcement:** the active `main-protection` ruleset (verified
+2026-11-15) requires a pull request with `Static Checks` and `Quality Gate`
+green on an up-to-date branch, requires conversation resolution, blocks force
+pushes and deletion, and has no bypass actors. The workflow alone could only
+make failures visible; the ruleset is what blocks a merge.
+
 ### What runs in CI
 
 | Suite | In CI? |
