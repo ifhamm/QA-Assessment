@@ -25,7 +25,7 @@ The Newman regression suite runs separately with `npm run test:api:local`. Full 
 | Cross-browser smoke | 3 `@smoke` tests on Firefox and WebKit, separate matrix job |
 | Visual regression | 2 tests, Linux-container baselines |
 | Optional performance | 1 k6 scenario, 150 iterations, 300 checks |
-| CI | 10 jobs; latest green `main` run 2 m 49 s |
+| CI | 10 jobs; latest green `main` run 3 m 17 s |
 | Stability evidence | 10 consecutive 4-worker runs, retries 0; 150/150 negative repeats; 61/61 cross-browser repeats |
 | Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate` |
 
@@ -234,13 +234,13 @@ the wrong project.
 
 ```bash
 npm run test:smoke       # 3 tagged tests + setup
-npm run test:regression  # 3 tagged tests, no setup dependency
+npm run test:regression  # 8 tagged tests, no setup dependency
 ```
 
 ### All Playwright tests
 
 ```bash
-npm run test:local  # self-hosted stack, 7 host-rendered tests
+npm run test:local  # self-hosted stack, 12 host-rendered tests
 npm test            # same host suite against the target in .env
 ```
 
@@ -357,7 +357,7 @@ The suites share fixtures and data factories but not data: each data-owning test
 
 The API regression suite is kept in Postman/Newman, while Playwright is used for UI functional testing and cross-layer verification. The Playwright API helper is therefore intentionally small: it supports test setup, cleanup, and API-side verification instead of duplicating the dedicated Postman regression suite.
 
-Page Object Model classes centralize UI locators and common interactions for the login, article editor, and article pages. A lightweight navbar component is used for shared authentication-state assertions. The tests themselves remain responsible for scenario orchestration and expected outcomes.
+Page Object Model classes centralize UI locators and common interactions for the login, registration, settings, article editor, and article pages. A lightweight navbar component is used for shared authentication-state assertions. The tests themselves remain responsible for scenario orchestration and expected outcomes.
 
 Synthetic users and articles are generated for test isolation rather than relying on shared fixed test accounts. UI and cross-layer tests use API calls for efficient setup and cleanup when the UI behavior under test does not require performing those steps through the browser.
 
@@ -413,12 +413,12 @@ Measured in WP0 and re-measured after each work package; the full tables and run
 | UI logins per full run | 5 successful (+1 invalid) | 1 successful (+1 invalid) |
 | Visual tests in CI | no; Windows-only baselines | yes; pinned Linux container, separate job |
 | Cross-browser smoke | none | Firefox + WebKit `@smoke` matrix, merged into the report and gate |
-| CI pipeline | 2 flat jobs; red on `main` | 10 jobs (8 stage types + 2-engine matrix) + merged report + `Quality Gate`; latest green run 2 m 49 s |
+| CI pipeline | 2 flat jobs; red on `main` | 10 jobs (8 stage types + 2-engine matrix) + merged report + `Quality Gate`; latest green run 3 m 17 s |
 | Reports | HTML only | merged HTML + JUnit + JSON, job summary |
 | Flaky visibility | hidden by retries | listed and annotated in the summary; still non-blocking |
 | Stability evidence | none with >1 worker | 10 consecutive 4-worker runs (retries 0); 150/150 negative repeats; 61/61 cross-browser repeats |
 
-Latest green `main` run [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) (commit `0736f7c`, WP9 merge): 2 m 49 s wall and 463 s summed job time. WP7's merge run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) records the gate at 11 s.
+Latest green `main` run [`43637279395`](https://github.com/ifhamm/QA-Assessment/actions/runs/43637279395) (commit `ec57d66`, WP8 merge): 3 m 17 s wall, 738 s summed job time, `Quality Gate` 8 s, all 10 jobs. The browser legs took 132 s (Firefox) and 131 s (WebKit), and the `summary` artifact lists the `browser` stage as `success`. WP7's merge run [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) records the gate at 11 s.
 
 ## CI Pipeline and Report
 

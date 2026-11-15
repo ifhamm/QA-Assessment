@@ -101,19 +101,24 @@ Breakdown:
 
 | Item | Value |
 | --- | --- |
-| Run | [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) |
-| Commit | `0736f7c` (WP9 merge) |
+| Run | [`43637279395`](https://github.com/ifhamm/QA-Assessment/actions/runs/43637279395) |
+| Commit | `ec57d66` (WP8 merge) |
 | Event | push |
 | Conclusion | **success** |
-| Overall wall | 2 m 49 s |
-| Jobs | 8: Plan 2 s, Static 10 s, Smoke 2 m 02 s, Regression 1 m 47 s, Visual 1 m 56 s, API 1 m 22 s, Merged Report 17 s, Quality Gate 7 s |
-| Summed job time | 7.72 runner-minutes (WP7 post-merge: 8.25; flat pre-WP6 baseline: 4.9) |
-| Reports | `merged-report` 202.8 KB, `merged-results` (JUnit + JSON), `summary`, plus `blob-report-*` and per-stage results |
+| Overall wall | 3 m 17 s |
+| Jobs | 10: Plan 2 s, Static 19 s, API 1 m 16 s, Smoke 1 m 40 s, Regression 2 m 06 s, Visual 2 m 00 s, Browser Firefox 2 m 12 s, Browser WebKit 2 m 11 s, Merged Report 24 s, Quality Gate 8 s |
+| Summed job time | 12.30 runner-minutes (WP9 post-merge: 7.72; the two browser legs add ~4.4 runner-minutes) |
+| Reports | `merged-report` 217.7 KB, `merged-results` (JUnit + JSON), `summary`, plus `blob-report-*` (including `blob-report-browser-<engine>`) and per-stage results |
 
 The WP0 baseline run (`38359351107`, commit `c5ec4f2`) was **red** because `AUTH_EMAIL`/`AUTH_PASSWORD` were absent; that failure and the follow-up public-environment observations are kept in the WP0 section below for history.
 
-The latest green run is the WP9 merge run above. WP9's PR run
-([`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950))
+The latest green run is the WP8 merge run above. WP8's PR run
+([`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626))
+was green in 2 m 58 s (712 s summed) on the implementation head; the final
+docs-only head
+([`43616684188`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616684188))
+was also green but overlapped the branch `push` run for the same SHA. WP9's PR
+run ([`43563573950`](https://github.com/ifhamm/QA-Assessment/actions/runs/43563573950))
 was green in 2 m 49 s, WP7's PR run
 ([`43554365923`](https://github.com/ifhamm/QA-Assessment/actions/runs/43554365923))
 was green on its merged tree, and the WP6 PR run
@@ -549,6 +554,7 @@ wall, 14.0–14.6 s Playwright, 4 passed. Visual: 2 passed in 3.3 s.
 | Post-merge `main`, 1 shard | [`43549955277`](https://github.com/ifhamm/QA-Assessment/actions/runs/43549955277) | 3 m 10 s | 8.0 | 202.8 KB |
 | Post-merge `main`, 1 shard (WP7 merge) | [`43559903310`](https://github.com/ifhamm/QA-Assessment/actions/runs/43559903310) | 3 m 05 s | 8.25 | 202.8 KB |
 | Post-merge `main`, 1 shard (WP9 merge) | [`43564371444`](https://github.com/ifhamm/QA-Assessment/actions/runs/43564371444) | 2 m 49 s | 7.72 | 202.8 KB |
+| Post-merge `main`, 1 shard (WP8 merge, + browser smoke) | [`43637279395`](https://github.com/ifhamm/QA-Assessment/actions/runs/43637279395) | 3 m 17 s | 12.30 | 217.7 KB |
 
 Wall time includes hosted-runner queueing and varies between otherwise identical
 runs: the final docs-only run
@@ -579,7 +585,9 @@ keep one shard by default, and enable sharding when the regression stage
 outgrows shard startup. The post-merge `main` run reproduces the staged cost on
 the shipped tree (3 m 10 s, 8.0 summed job-minutes), so the conclusion is not an
 artifact of the branch runs. The WP7 post-merge run reproduces it again
-(3 m 05 s, 8.25 summed job-minutes) with `Quality Gate` included.
+(3 m 05 s, 8.25 summed job-minutes) with `Quality Gate` included. The WP8
+post-merge run adds two browser legs: 3 m 17 s wall and 12.30 summed
+runner-minutes (738 s), with the Chromium stages still inside the WP7 range.
 Runner-minutes here are the sum of job durations;
 GitHub bills per-job minutes rounded up.
 
@@ -693,14 +701,15 @@ decision note records it.
 | Evidence | Run | Result |
 | --- | --- | --- |
 | PR run | [`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626) | green; 2 m 58 s wall, 712 s summed, `Quality Gate` 7 s; 22 merged Playwright results (0 failed, 0 flaky); Newman 17/57 |
-| Post-merge `main` | pending | pending |
+| Post-merge `main` | [`43637279395`](https://github.com/ifhamm/QA-Assessment/actions/runs/43637279395) | green; 3 m 17 s wall, 738 s summed, `Quality Gate` 8 s; 22 merged Playwright results (0 failed, 0 flaky); `browser` stage `success` |
 
-The browser legs took 122 s (Firefox) and 110 s (WebKit), in line with UI Smoke
-at 114 s. Against the WP9 baseline (169 s wall, 463 s summed), wall time moved
-by +9 s while summed runner time rose by 249 s: the price of two extra stack
-builds that run in parallel. The merged report contains all three setup runs and
-all browser projects; the `summary` artifact shows the `browser` stage as
-`success` between `visual` and `report`.
+The browser legs took 132 s (Firefox) and 131 s (WebKit) in the post-merge run;
+the clean PR implementation head measured 122 s and 110 s, in line with UI Smoke
+at 114 s. Against the WP9 baseline (169 s wall, 463 s summed), the post-merge
+wall moved by +28 s and summed runner time by +275 s: the price of two extra
+stack builds that run in parallel. The merged report contains all three setup
+runs and all browser projects; the `summary` artifact shows the `browser` stage
+as `success` between `visual` and `report`.
 
 ## Reporting quality
 
