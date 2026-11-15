@@ -106,3 +106,7 @@ is green in 2 m 49 s with `Quality Gate` at 7 s.
   action; the three summary artifacts are committed under `docs/evidence/`.
 - Branch protection (`Static Checks` and `Quality Gate`, up-to-date branches,
   no direct pushes) is an owner action recorded in `docs/quality-gates.md`.
+
+**Status update 2026-11-15:** WP8 shipped as `ec57d66`, the logged-in summary
+screenshot is committed under `docs/evidence/`, and the active `main-protection`
+ruleset enforces the gate. All three follow-ups above are closed.

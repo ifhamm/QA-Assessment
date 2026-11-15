@@ -27,7 +27,7 @@ The Newman regression suite runs separately with `npm run test:api:local`. Full 
 | Optional performance | 1 k6 scenario, 150 iterations, 300 checks |
 | CI | 10 jobs; latest green `main` run 3 m 17 s |
 | Stability evidence | 10 consecutive 4-worker runs, retries 0; 150/150 negative repeats; 61/61 cross-browser repeats |
-| Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate` |
+| Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate`; enforced on `main` by the `main-protection` ruleset |
 
 ## Test Coverage
 
@@ -459,7 +459,9 @@ Static Checks (typecheck, lint, tags) ─┬─ API Tests
   summary lists passed/failed/flaky counts, failing tests with `file:line`,
   stage, first error and trace availability, plus the Newman totals. Flaky
   tests warn; visual diffs require human review. The written policy is
-  [`docs/quality-gates.md`](docs/quality-gates.md).
+  [`docs/quality-gates.md`](docs/quality-gates.md). The active `main-protection`
+  ruleset requires `Static Checks` and `Quality Gate` on an up-to-date branch
+  before merge and blocks direct pushes, so the gate is enforced, not advisory.
 - Each job removes the stack with `docker compose down -v` in an `always()`
   step. npm and Playwright browsers are cached; Docker layers are not shared
   between jobs, which is the main cost of the staged layout.
