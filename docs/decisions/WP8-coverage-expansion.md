@@ -1,6 +1,6 @@
 # WP8 - Coverage Expansion: Negative Tests and Cross-Browser Smoke
 
-Status: implemented on `wp8/coverage-expansion`, plan approved 2026-11-14.
+Status: merged as `ec57d66` via PR [#14](https://github.com/ifhamm/QA-Assessment/pull/14) on 2026-11-15. Plan approved 2026-11-14.
 Owner approval was given in the working session after the scope options were
 reviewed; the recommended balanced scope was selected, with the delete-article
 UI test included because WP1 explicitly deferred it to WP8.
@@ -89,8 +89,9 @@ was relaxed; the incident is recorded here rather than hidden.
 
 - **Cost.** Two extra parallel jobs each build the stack. Two browser stack
   builds and the extra merged results raised summed runner time from 463 s to
-  712 s (+249 s) while wall time stayed flat (169 s to 178 s, +9 s). This is the
-  measured cost in the PR run; it is recorded in `docs/metrics.md`.
+  712 s (+249 s) while wall time stayed flat (169 s to 178 s, +9 s) in the clean
+  PR run. The post-merge run measured 197 s wall and 738 s summed, within normal
+  variance. This is the measured cost recorded in `docs/metrics.md`.
 - **WebKit on Linux.** The CI job installs WebKit with `--with-deps`; the host
   probe used the Windows WebKit build. Both exercise the same project and the
   same assertions, but the CI run is the authoritative image.
