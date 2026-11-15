@@ -42,6 +42,7 @@ The PR body for each work package is committed here so the reasoning survives in
 | [`evidence/wp7-green-summary.md`](evidence/wp7-green-summary.md) | `summary` artifact of green run [`43552638345`](https://github.com/ifhamm/QA-Assessment/actions/runs/43552638345). |
 | [`evidence/wp7-intentional-failure-summary.md`](evidence/wp7-intentional-failure-summary.md) | `summary` artifact of the deliberate smoke failure, run [`43553098095`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553098095); shows the failing test, stage, attempts, and trace availability. |
 | [`evidence/wp7-flaky-warning-summary.md`](evidence/wp7-flaky-warning-summary.md) | `summary` artifact of the flaky-warning run [`43553398227`](https://github.com/ifhamm/QA-Assessment/actions/runs/43553398227); the run stays green with a `##[warning]`. |
+| [`evidence/wp8-quality-gate-summary.png`](evidence/wp8-quality-gate-summary.png) | `Quality Gate` job-summary screenshot captured from a logged-in GitHub session (owner-provided); the browser-rendered summary is not available to anonymous sessions. |
 | [`evidence/wp5-intentional-failure-diff.png`](evidence/wp5-intentional-failure-diff.png), [`wp5-intentional-failure-actual.png`](evidence/wp5-intentional-failure-actual.png) | Visual diff and actual screenshot from run [`41466501007`](https://github.com/ifhamm/QA-Assessment/actions/runs/41466501007). |
 
 Live run history: <https://github.com/ifhamm/QA-Assessment/actions/workflows/tests.yml>.

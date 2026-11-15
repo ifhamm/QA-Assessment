@@ -724,6 +724,7 @@ as `success` between `visual` and `report`.
 | Video | No |
 | JUnit / JSON | Yes (WP7); per stage and merged |
 | Job summary | Yes (WP7); `Quality Gate` job |
+| Summary screenshot | [`docs/evidence/wp8-quality-gate-summary.png`](evidence/wp8-quality-gate-summary.png), captured from a logged-in session |
 | CI artifact | `merged-report`, `merged-results`, `results-*`, `api-results`, `summary`, traces per failed stage, `visual-diffs` on visual failure; 7-day retention |
 
 **Qualitative:** better than a bare console. A failure leaves a screenshot,

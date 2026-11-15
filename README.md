@@ -338,7 +338,7 @@ The suites share fixtures and data factories but not data: each data-owning test
 ├── docs/
 │   ├── README.md                     # Documentation index
 │   ├── decisions/                    # One decision note per work package
-│   ├── evidence/                     # Committed job summaries and visual failure evidence
+│   ├── evidence/                     # Committed job summaries, the logged-in summary screenshot, and visual failure evidence
 │   ├── pr/                           # PR descriptions
 │   ├── metrics.md                    # Baseline and per-WP measurements
 │   ├── progress.md                   # Work package tracker and blockers
