@@ -132,6 +132,10 @@ green on an up-to-date branch, requires conversation resolution, blocks force
 pushes and deletion, and has no bypass actors. The workflow alone could only
 make failures visible; the ruleset is what blocks a merge.
 
+**Trigger cost:** `push` is limited to `main`; branch commits run once via
+`pull_request`. The duplicate push/PR pair that doubled runner minutes for every
+branch commit is gone, and post-merge `main` verification is unchanged.
+
 ### What runs in CI
 
 | Suite | In CI? |
