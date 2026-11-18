@@ -4,15 +4,21 @@ export class ArticlePage {
   readonly page: Page;
   readonly title: Locator;
   readonly body: Locator;
-  readonly editButton: Locator;
-  readonly deleteButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.title = page.getByRole("heading", { level: 1 });
     this.body = page.locator(".article-content");
-    this.editButton = page.getByRole("link", { name: /Edit Article/i });
-    this.deleteButton = page.getByRole("button", { name: /Delete Article/i });
+  }
+
+  deleteButton(): Locator {
+    // The article page renders the destructive action twice (top and bottom meta sections).
+    return this.page.getByRole("button", { name: /Delete Article/i }).first();
+  }
+
+  async delete() {
+    await expect(this.deleteButton()).toBeVisible();
+    await this.deleteButton().click();
   }
 
   async expectTitle(expectedTitle: string) {

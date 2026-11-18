@@ -65,10 +65,9 @@ test.describe("Negative and boundary behavior", () => {
     await editorPage.publish();
 
     await expect(page).toHaveURL(/\/editor$/);
-    const errors = page.locator(".error-messages");
-    await expect(errors).toContainText("title can't be blank");
-    await expect(errors).toContainText("description can't be blank");
-    await expect(errors).toContainText("body can't be blank");
+    await expect(editorPage.errorMessages).toContainText("title can't be blank");
+    await expect(editorPage.errorMessages).toContainText("description can't be blank");
+    await expect(editorPage.errorMessages).toContainText("body can't be blank");
   });
 
   test("logout clears the token and protects the editor @regression", async ({
@@ -101,17 +100,13 @@ test.describe("Negative and boundary behavior", () => {
 
   test("deletes an owned article through the UI @regression", async ({
     authenticatedPage: page,
+    articlePage,
     article,
     request,
   }) => {
     await page.goto(`/article/${article.slug}`);
 
-    // The article page renders the destructive action twice (top and bottom).
-    const deleteButton = page
-      .getByRole("button", { name: /Delete Article/i })
-      .first();
-    await expect(deleteButton).toBeVisible();
-    await deleteButton.click();
+    await articlePage.delete();
 
     await expect(page).toHaveURL(/\/$/);
 

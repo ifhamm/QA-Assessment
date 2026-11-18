@@ -37,9 +37,7 @@ test.describe("Cross-Layer Tests", () => {
     await navBar.expectLoggedIn(user.username);
 
     // Assert initial form data.
-    await expect(editorPage.titleInput).toHaveValue(article.data.title, {
-      timeout: 10000,
-    });
+    await expect(editorPage.titleInput).toHaveValue(article.data.title);
 
     // Update article via UI.
     const updatedTitle = `Updated ${article.data.title}`;
@@ -49,7 +47,7 @@ test.describe("Cross-Layer Tests", () => {
     await editorPage.publish();
 
     // Assert redirection.
-    await expect(page).toHaveURL(/\/article\//, { timeout: 10000 });
+    await expect(page).toHaveURL(/\/article\//);
 
     // Assert UI content.
     await articlePage.expectTitle(updatedTitle);
