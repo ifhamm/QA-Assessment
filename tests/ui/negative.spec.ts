@@ -101,17 +101,13 @@ test.describe("Negative and boundary behavior", () => {
 
   test("deletes an owned article through the UI @regression", async ({
     authenticatedPage: page,
+    articlePage,
     article,
     request,
   }) => {
     await page.goto(`/article/${article.slug}`);
 
-    // The article page renders the destructive action twice (top and bottom).
-    const deleteButton = page
-      .getByRole("button", { name: /Delete Article/i })
-      .first();
-    await expect(deleteButton).toBeVisible();
-    await deleteButton.click();
+    await articlePage.delete();
 
     await expect(page).toHaveURL(/\/$/);
 
