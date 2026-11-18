@@ -989,6 +989,10 @@
             "exec": [
               "const json = pm.response.json();\r",
               "\r",
+              "pm.test(\"Favorite Article returns 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
               "pm.test(\"Article is favorited\", function () {\r",
               "    pm.expect(json.article.favorited).to.eql(true);\r",
               "});\r",
@@ -1044,6 +1048,10 @@
           "script": {
             "exec": [
               "const json = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Unfavorite Article returns 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
               "\r",
               "pm.test(\"Article is unfavorited\", function () {\r",
               "    pm.expect(json.article.favorited).to.eql(false);\r",
