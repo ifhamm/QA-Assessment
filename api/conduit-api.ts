@@ -116,23 +116,4 @@ export class ConduitAPI {
       console.warn(`Cleanup: delete article ${slug} returned ${res.status()}`);
     }
   }
-
-  /** Updates an article by slug. */
-  async updateArticle(
-    token: string,
-    slug: string,
-    updates: Partial<ArticleData>
-  ): Promise<Article> {
-    const res = await this.request.put(`${API_BASE}/articles/${slug}`, {
-      headers: { Authorization: `Token ${token}` },
-      data: { article: updates },
-    });
-    if (!res.ok()) {
-      throw new Error(
-        `Update article failed: ${res.status()} ${await res.text()}`
-      );
-    }
-    const json = await res.json();
-    return json.article;
-  }
 }
