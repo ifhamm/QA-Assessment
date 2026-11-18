@@ -34,7 +34,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Registration returns expected status\", function () {\r",
               "    pm.response.to.have.status(201);\r",
@@ -60,9 +63,11 @@
               "        .and.not.be.empty;\r",
               "});\r",
               "\r",
-              "pm.collectionVariables.set(\"ownerToken\",json.user.token);\r",
-              "pm.collectionVariables.set(\"ownerEmail\", json.user.email);\r",
-              "pm.collectionVariables.set(\"ownerUsername\", json.user.username);"
+              "if (json && json.user) {\r",
+              "    pm.collectionVariables.set(\"ownerToken\", json.user.token);\r",
+              "    pm.collectionVariables.set(\"ownerEmail\", json.user.email);\r",
+              "    pm.collectionVariables.set(\"ownerUsername\", json.user.username);\r",
+              "}"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -102,7 +107,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Get current user returns success\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -174,7 +182,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Login returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -194,7 +205,9 @@
               "        .and.not.be.empty;\r",
               "});\r",
               "\r",
-              "pm.collectionVariables.set(\"ownerToken\",json.user.token);"
+              "if (json && json.user) {\r",
+              "    pm.collectionVariables.set(\"ownerToken\", json.user.token);\r",
+              "}"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -276,7 +289,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Create Article returns 201\", function () {\r",
               "    pm.response.to.have.status(201);\r",
@@ -312,9 +328,11 @@
               "        .and.not.be.empty;\r",
               "});\r",
               "\r",
-              "pm.collectionVariables.set(\"ownerArticleSlug\", json.article.slug);\r",
-              "pm.collectionVariables.set(\"ownerArticleTitle\", json.article.title);\r",
-              "pm.collectionVariables.set(\"ownerArticleDescription\", json.article.description)"
+              "if (json && json.article) {\r",
+              "    pm.collectionVariables.set(\"ownerArticleSlug\", json.article.slug);\r",
+              "    pm.collectionVariables.set(\"ownerArticleTitle\", json.article.title);\r",
+              "    pm.collectionVariables.set(\"ownerArticleDescription\", json.article.description);\r",
+              "}"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -377,7 +395,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Get Article returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -509,7 +530,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Update Article returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -551,20 +575,11 @@
               "        .and.not.be.empty;\r",
               "});\r",
               "\r",
-              "pm.collectionVariables.set(\r",
-              "    \"newArticleSlug\",\r",
-              "    json.article.slug\r",
-              ");\r",
-              "\r",
-              "pm.collectionVariables.set(\r",
-              "    \"newArticleTitle\",\r",
-              "    json.article.title\r",
-              ")\r",
-              "\r",
-              "pm.collectionVariables.set(\r",
-              "    \"newArticleDescription\",\r",
-              "    json.article.description\r",
-              ")"
+              "if (json && json.article) {\r",
+              "    pm.collectionVariables.set(\"newArticleSlug\", json.article.slug);\r",
+              "    pm.collectionVariables.set(\"newArticleTitle\", json.article.title);\r",
+              "    pm.collectionVariables.set(\"newArticleDescription\", json.article.description);\r",
+              "}"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -628,7 +643,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Get updated article returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -744,7 +762,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Register other user returns 201\", function () {\r",
               "    pm.response.to.have.status(201);\r",
@@ -756,10 +777,9 @@
               "        .and.not.be.empty;\r",
               "});\r",
               "\r",
-              "pm.collectionVariables.set(\r",
-              "    \"otherToken\",\r",
-              "    json.user.token\r",
-              ");"
+              "if (json && json.user) {\r",
+              "    pm.collectionVariables.set(\"otherToken\", json.user.token);\r",
+              "}"
             ],
             "type": "text/javascript",
             "packages": {},
@@ -857,7 +877,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Owner article is still available\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -923,7 +946,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Missing title request is rejected\", function () {\r",
               "    pm.response.to.have.status(422);\r",
@@ -987,7 +1013,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Favorite Article returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -1047,7 +1076,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Unfavorite Article returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
@@ -1212,7 +1244,7 @@
         {
           "listen": "test",
           "script": {
-            "exec": "const json = pm.response.json();\r\n\r\npm.test(\"Duplicate registration returns 409\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"Duplicate registration reports both fields\", function () {\r\n    pm.expect(json.errors.email).to.be.an(\"array\").that.is.not.empty;\r\n    pm.expect(json.errors.username).to.be.an(\"array\").that.is.not.empty;\r\n});",
+            "exec": "let json = {}; try { json = pm.response.json(); } catch (e) {}\r\n\r\npm.test(\"Duplicate registration returns 409\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\n\r\npm.test(\"Duplicate registration reports both fields\", function () {\r\n    pm.expect(json.errors.email).to.be.an(\"array\").that.is.not.empty;\r\n    pm.expect(json.errors.username).to.be.an(\"array\").that.is.not.empty;\r\n});",
             "type": "text/javascript",
             "packages": {},
             "requests": {}
@@ -1250,7 +1282,7 @@
         {
           "listen": "test",
           "script": {
-            "exec": "const json = pm.response.json();\r\n\r\npm.test(\"Malformed token returns 401\", function () {\r\n    pm.response.to.have.status(401);\r\n});\r\n\r\npm.test(\"Malformed token error names the token\", function () {\r\n    pm.expect(json.errors.token).to.include(\"is invalid\");\r\n});",
+            "exec": "let json = {}; try { json = pm.response.json(); } catch (e) {}\r\n\r\npm.test(\"Malformed token returns 401\", function () {\r\n    pm.response.to.have.status(401);\r\n});\r\n\r\npm.test(\"Malformed token error names the token\", function () {\r\n    pm.expect(json.errors.token).to.include(\"is invalid\");\r\n});",
             "type": "text/javascript",
             "packages": {},
             "requests": {}
@@ -1298,7 +1330,10 @@
           "listen": "test",
           "script": {
             "exec": [
-              "const json = pm.response.json();\r",
+              "let json = {};\r",
+              "try {\r",
+              "    json = pm.response.json();\r",
+              "} catch (e) {}\r",
               "\r",
               "pm.test(\"Get Tags returns 200\", function () {\r",
               "    pm.response.to.have.status(200);\r",
