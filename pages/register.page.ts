@@ -6,7 +6,6 @@ export class RegisterPage {
   readonly emailInput: Locator;
   readonly passwordInput: Locator;
   readonly signUpButton: Locator;
-  readonly errorMessages: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -14,7 +13,6 @@ export class RegisterPage {
     this.emailInput = page.getByPlaceholder("Email");
     this.passwordInput = page.getByPlaceholder("Password");
     this.signUpButton = page.getByRole("button", { name: /Sign up/i });
-    this.errorMessages = page.locator(".error-messages");
   }
 
   async goto() {

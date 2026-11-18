@@ -7,6 +7,7 @@ export class EditorPage {
   readonly bodyInput: Locator;
   readonly tagsInput: Locator;
   readonly publishButton: Locator;
+  readonly errorMessages: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -15,6 +16,7 @@ export class EditorPage {
     this.bodyInput = page.getByPlaceholder("Write your article (in markdown)");
     this.tagsInput = page.getByPlaceholder("Enter tags");
     this.publishButton = page.getByRole("button", { name: "Publish Article" });
+    this.errorMessages = page.locator(".error-messages");
   }
 
   async goto(slug?: string) {
