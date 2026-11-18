@@ -6,7 +6,8 @@ test("opens the dashboard as an authenticated user @smoke", async ({
 }) => {
   await page.goto("/");
 
-  await expect(page).not.toHaveURL(/\/login/);
+  await expect(page).toHaveURL(/\/$/);
   await expect(navBar.newArticleLink()).toBeVisible();
   await expect(navBar.signInLink()).not.toBeVisible();
+  await expect(navBar.signUpLink()).not.toBeVisible();
 });
