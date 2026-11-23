@@ -699,7 +699,7 @@ Optional stretch package; the plan was approved on 2026-11-14.
 | Full suite, `npm run test:local` | 12/12 passed (12.3 s warm) |
 | Cross-browser smoke | 7/7 including setup (25.9 s) |
 | Cross-browser, `--repeat-each=10` | 61/61 including setup (2.8 min) |
-| `npm run test:api:local` | 17 requests / 57 assertions, 0 failed (2.9 s) |
+| `npm run test:api:local` | 18 requests / 63 assertions, 0 failed |
 
 A single cold full-suite run failed the registration-gating test while the host
 was still busy with the preceding browser workload. It did not reproduce in the
@@ -710,7 +710,7 @@ decision note records it.
 
 | Evidence | Run | Result |
 | --- | --- | --- |
-| PR run | [`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626) | green; 2 m 58 s wall, 712 s summed, `Quality Gate` 7 s; 22 merged Playwright results (0 failed, 0 flaky); Newman 17/57 |
+| PR run | [`43616194626`](https://github.com/ifhamm/QA-Assessment/actions/runs/43616194626) | green; 2 m 58 s wall, 712 s summed, `Quality Gate` 7 s; 22 merged Playwright results (0 failed, 0 flaky); Newman 18/63 |
 | Post-merge `main` | [`43637279395`](https://github.com/ifhamm/QA-Assessment/actions/runs/43637279395) | green; 3 m 17 s wall, 738 s summed, `Quality Gate` 8 s; 22 merged Playwright results (0 failed, 0 flaky); `browser` stage `success` |
 
 The browser legs took 132 s (Firefox) and 131 s (WebKit) in the post-merge run;
