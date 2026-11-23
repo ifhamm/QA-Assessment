@@ -37,7 +37,7 @@
     "@typescript/native": "npm:typescript@^7.0.2",
     "cross-env": "^10.1.0",
     "eslint": "^10.14.0",
-    "newman": "^6.2.2",
+    "newman": "^6.2.3",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-eslint": "^8.72.2"
   },
