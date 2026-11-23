@@ -60,7 +60,7 @@ jobs:
         run: npm run coverage:report
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage-report/
@@ -96,7 +96,7 @@ jobs:
 
       - name: Upload API results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: api-results
           path: test-results/newman.json
@@ -160,7 +160,7 @@ jobs:
 
       - name: Upload smoke blob report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blob-report-smoke
           path: blob-report/smoke
@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload smoke results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: results-smoke
           path: |
@@ -180,7 +180,7 @@ jobs:
 
       - name: Upload smoke traces
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-traces
           path: test-results/
@@ -237,7 +237,7 @@ jobs:
 
       - name: Upload browser blob report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blob-report-browser-${{ matrix.browser }}
           path: blob-report/browser-${{ matrix.browser }}
@@ -246,7 +246,7 @@ jobs:
 
       - name: Upload browser results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: results-browser-${{ matrix.browser }}
           path: |
@@ -257,7 +257,7 @@ jobs:
 
       - name: Upload browser traces
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: browser-traces-${{ matrix.browser }}
           path: test-results/
@@ -310,7 +310,7 @@ jobs:
 
       - name: Upload regression blob report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blob-report-regression-${{ matrix.shard }}
           path: blob-report/regression-${{ matrix.shard }}
@@ -319,7 +319,7 @@ jobs:
 
       - name: Upload regression results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: results-regression-${{ matrix.shard }}
           path: |
@@ -330,7 +330,7 @@ jobs:
 
       - name: Upload regression traces
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: regression-traces-${{ matrix.shard }}
           path: test-results/
@@ -372,7 +372,7 @@ jobs:
 
       - name: Upload visual diffs
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-diffs
           path: |
@@ -383,7 +383,7 @@ jobs:
 
       - name: Upload visual blob report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blob-report-visual
           path: blob-report/visual
@@ -392,7 +392,7 @@ jobs:
 
       - name: Upload visual results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: results-visual
           path: |
@@ -454,7 +454,7 @@ jobs:
 
       - name: Upload merged report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: merged-report
           path: playwright-report/
@@ -463,7 +463,7 @@ jobs:
 
       - name: Upload merged results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: merged-results
           path: |
@@ -522,7 +522,7 @@ jobs:
 
       - name: Upload summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: summary
           path: summary.md
