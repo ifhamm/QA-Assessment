@@ -10,6 +10,7 @@ Everything that explains how this repository was built and how it is verified. T
 | [`progress.md`](progress.md) | Current state, the work-package tracker, blockers, and the per-WP evidence index. |
 | [`metrics.md`](metrics.md) | Baseline and per-WP measurements: tests per layer, durations, UI logins, flakiness, CI cost, reporting quality. |
 | [`quality-gates.md`](quality-gates.md) | The written block/warn policy, branch-protection settings, artifact map, and triage path. |
+| [`coverage.md`](coverage.md) | Risk-based test coverage matrix and inventory source. |
 | [`audit.md`](audit.md) | The WP0 audit of the repository as found (`c5ec4f2`), including README claims vs reality. Kept as a historical snapshot. |
 
 ## Decision notes

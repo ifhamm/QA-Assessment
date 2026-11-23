@@ -50,7 +50,7 @@ gaps left by WP2/WP3 without re-testing behavior that was already covered.
 | Full suite (`npm run test:local`) | 12/12 |
 | Cross-browser smoke | 7/7 including setup |
 | Cross-browser `--repeat-each=10` | 61/61 |
-| `npm run test:api:local` | 17 requests / 57 assertions, 0 failed |
+| `npm run test:api:local` | 18 requests / 63 assertions, 0 failed |
 
 ### CI evidence
 

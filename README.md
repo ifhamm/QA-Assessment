@@ -20,14 +20,15 @@ The Newman regression suite runs separately with `npm run test:api:local`. Full 
 
 | Item | Value |
 | --- | --- |
-| API regression | 17 requests, 57 assertions |
-| Host Playwright runs | 12 (3 `@smoke`, 8 `@regression`, 1 setup) |
+| API regression | 18 requests, 63 assertions |
+| Host Playwright definitions | 12 (11 user-facing + 1 setup: 3 `@smoke`, 8 `@regression`) |
 | Cross-browser smoke | 3 `@smoke` tests on Firefox and WebKit, separate matrix job |
 | Visual regression | 2 tests, Linux-container baselines |
 | Optional performance | 1 k6 scenario, 150 iterations, 300 checks |
 | CI | 10 jobs; latest green `main` run 3 m 17 s |
 | Stability evidence | 10 consecutive 4-worker runs, retries 0; 150/150 negative repeats; 61/61 cross-browser repeats |
 | Reports and gates | merged HTML + JUnit + JSON, job summary, `Quality Gate`; enforced on `main` by the `main-protection` ruleset |
+| Coverage inventory | automated Markdown + JSON report for Playwright and Newman behavior coverage |
 
 ## Test Coverage
 
@@ -213,6 +214,19 @@ uploads the expected, actual, and diff images as the `visual-diffs` artifact.
 npm run typecheck
 ```
 
+### Coverage inventory
+
+Generate a traceability report from the Playwright specs and Postman collection:
+
+```bash
+npm run coverage:report
+```
+
+The output is written to `coverage-report/coverage-report.md` and
+`coverage-report/coverage-report.json`. CI also uploads both files as the
+`coverage-report` artifact. This report inventories behavioral scenarios and
+test counts; it is separate from source-code line or branch coverage.
+
 ### Lint and stage tags
 
 ```bash
@@ -305,7 +319,8 @@ The suites share fixtures and data factories but not data: each data-owning test
 ├── eslint.config.mjs                 # Minimal TypeScript lint config
 ├── scripts/
 │   ├── check-test-tags.mjs           # Enforces @smoke / @regression tags
-│   └── ci-summary.mjs                # Job summary and gate evaluation
+│   ├── ci-summary.mjs                # Job summary and gate evaluation
+│   └── coverage-report.mjs           # Markdown + JSON coverage inventory
 ├── api/
 │   └── conduit-api.ts                # Playwright API helper for setup, cleanup, and cross-layer checks
 ├── docker/
@@ -408,7 +423,7 @@ Measured in WP0 and re-measured after each work package; the full tables and run
 | Metric | WP0 baseline | Current `main` |
 | --- | --- | --- |
 | Playwright tests (definitions) | 9 (1 setup + 8 user-facing) | 14 (1 setup + 13 user-facing) |
-| API regression | 15 requests / 53 assertions | 17 requests / 57 assertions |
+| API regression | 15 requests / 53 assertions | 18 requests / 63 assertions |
 | Workers / retries | 1 worker, no `fullyParallel` | 4 workers, `fullyParallel`; retries 0 locally, 1 in CI as a safety net |
 | UI logins per full run | 5 successful (+1 invalid) | 1 successful (+1 invalid) |
 | Visual tests in CI | no; Windows-only baselines | yes; pinned Linux container, separate job |

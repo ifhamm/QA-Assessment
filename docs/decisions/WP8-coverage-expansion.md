@@ -77,7 +77,7 @@ execution is the setup project.
 | Full local suite (`npm run test:local`) | 12/12 passed, 12.3 s warm |
 | Cross-browser smoke | 3 tests on each engine, 7/7 including setup, 25.9 s |
 | Cross-browser `--repeat-each=10` | 61/61 including setup, 2.8 min |
-| `npm run test:api:local` | 17 requests / 57 assertions, 0 failed, 2.9 s |
+| `npm run test:api:local` | 18 requests / 63 assertions, 0 failed |
 
 One cold full-suite run failed the registration-gating test while the machine
 was still busy with the preceding browser workload. It did not reproduce in the

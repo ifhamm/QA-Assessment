@@ -17,6 +17,7 @@ playwright/.auth/
 
 # Local output of `npm run ci:summary`
 summary.md
+coverage-report/
 
 # Logs
 npm-debug.log*

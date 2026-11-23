@@ -56,6 +56,16 @@ jobs:
       - name: Check stage tags
         run: npm run check:tags
 
+      - name: Generate coverage report
+        run: npm run coverage:report
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report/
+          retention-days: 7
+
   api-tests:
     name: API Tests
     needs: static
