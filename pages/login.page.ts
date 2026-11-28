@@ -27,5 +27,6 @@ export class LoginPage {
 
   async expectErrorVisible() {
     await expect(this.errorMessages).toBeVisible();
+    await expect(this.errorMessages).toContainText(/invalid/i);
   }
 }

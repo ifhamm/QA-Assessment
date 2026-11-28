@@ -1,7 +1,5 @@
 import { APIRequestContext } from "@playwright/test";
 
-const API_BASE = process.env.API_BASE_URL;
-
 export interface ArticleData {
   title: string;
   description: string;
@@ -24,13 +22,19 @@ export interface AuthUser {
   username: string;
 }
 
-/** API client for Conduit backend. */
 export class ConduitAPI {
   constructor(private readonly request: APIRequestContext) {}
 
-  /** Authenticates a user. */
+  private getApiBase(): string {
+    const apiBase = process.env.API_BASE_URL;
+    if (!apiBase) {
+      throw new Error("API_BASE_URL must be set for ConduitAPI requests.");
+    }
+    return apiBase;
+  }
+
   async login(email: string, password: string): Promise<AuthUser> {
-    const res = await this.request.post(`${API_BASE}/users/login`, {
+    const res = await this.request.post(`${this.getApiBase()}/users/login`, {
       data: { user: { email, password } },
     });
     if (!res.ok()) {
@@ -40,9 +44,8 @@ export class ConduitAPI {
     return json.user;
   }
 
-  /** Registers a new user. */
   async registerUser(username: string, email: string, password: string): Promise<AuthUser> {
-    const res = await this.request.post(`${API_BASE}/users`, {
+    const res = await this.request.post(`${this.getApiBase()}/users`, {
       data: { user: { username, email, password } },
     });
     if (!res.ok()) {
@@ -59,7 +62,7 @@ export class ConduitAPI {
    * A 405 is therefore reported as an unsupported cleanup operation.
    */
   async deleteUser(token: string): Promise<boolean> {
-    const res = await this.request.delete(`${API_BASE}/user`, {
+    const res = await this.request.delete(`${this.getApiBase()}/user`, {
       headers: { Authorization: `Token ${token}` },
     });
     if (res.status() === 405) {
@@ -76,9 +79,8 @@ export class ConduitAPI {
     return true;
   }
 
-  /** Creates an article. */
   async createArticle(token: string, article: ArticleData): Promise<Article> {
-    const res = await this.request.post(`${API_BASE}/articles`, {
+    const res = await this.request.post(`${this.getApiBase()}/articles`, {
       headers: { Authorization: `Token ${token}` },
       data: { article },
     });
@@ -91,11 +93,10 @@ export class ConduitAPI {
     return json.article;
   }
 
-  /** Fetches an article by slug. */
   async getArticle(slug: string, token?: string): Promise<Article> {
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Token ${token}`;
-    const res = await this.request.get(`${API_BASE}/articles/${slug}`, { headers });
+    const res = await this.request.get(`${this.getApiBase()}/articles/${slug}`, { headers });
     if (!res.ok()) {
       throw new Error(
         `Get article failed: ${res.status()} ${await res.text()}`
@@ -105,15 +106,26 @@ export class ConduitAPI {
     return json.article;
   }
 
-  /** Deletes an article by slug. */
+  async getArticleStatus(slug: string, token?: string): Promise<number> {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Token ${token}`;
+    const res = await this.request.get(
+      `${this.getApiBase()}/articles/${slug}`,
+      { headers }
+    );
+    return res.status();
+  }
+
   async deleteArticle(token: string, slug: string): Promise<void> {
-    const res = await this.request.delete(`${API_BASE}/articles/${slug}`, {
+    const res = await this.request.delete(`${this.getApiBase()}/articles/${slug}`, {
       headers: { Authorization: `Token ${token}` },
     });
     // A 404 means the article is already gone. Cleanup is idempotent: a test
     // that deletes through the UI must not turn teardown into a warning.
     if (res.status() !== 404 && !res.ok()) {
-      console.warn(`Cleanup: delete article ${slug} returned ${res.status()}`);
+      throw new Error(
+        `Delete article ${slug} failed: ${res.status()} ${await res.text()}`
+      );
     }
   }
 }

@@ -1,19 +1,14 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../../fixtures/test-base";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test("login page matches visual baseline", async ({ page }) => {
-    await page.goto("/login");
+test("login page matches visual baseline", async ({ page, loginPage }) => {
+  await loginPage.goto();
 
-    await expect(
-        page.getByRole("heading", { name: "Sign in" })
-    ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(loginPage.emailInput).toBeVisible();
 
-    await expect(
-        page.getByPlaceholder("Email")
-    ).toBeVisible();
-
-    await expect(page).toHaveScreenshot("login-page.png", {
-        fullPage: true,
-    });
+  await expect(page).toHaveScreenshot("login-page.png", {
+    fullPage: true,
+  });
 });

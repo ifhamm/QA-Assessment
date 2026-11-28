@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 import dotenv from "dotenv";
 import path from "node:path";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const authFile = path.resolve("playwright/.auth/user.json");
 const isCI = Boolean(process.env.CI);

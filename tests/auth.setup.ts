@@ -26,7 +26,7 @@ setup("authenticate via API", async ({ request, baseURL }, testInfo) => {
     } catch (error) {
       if (
         !(error instanceof Error) ||
-        !error.message.startsWith("Login failed: 401")
+        !/^Login failed: (401|403|422)\b/.test(error.message)
       ) {
         throw error;
       }

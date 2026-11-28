@@ -102,7 +102,7 @@ test.describe("Negative and boundary behavior", () => {
     authenticatedPage: page,
     articlePage,
     article,
-    request,
+    api,
   }) => {
     await page.goto(`/article/${article.slug}`);
 
@@ -112,7 +112,7 @@ test.describe("Negative and boundary behavior", () => {
 
     // The UI redirect alone would also happen if the request never reached the
     // API, so confirm the article is gone at the source.
-    const response = await request.get(`/api/articles/${article.slug}`);
-    expect(response.status()).toBe(404);
+    const status = await api.getArticleStatus(article.slug);
+    expect(status).toBe(404);
   });
 });

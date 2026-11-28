@@ -17,7 +17,6 @@ export class ArticlePage {
   }
 
   async delete() {
-    await expect(this.deleteButton()).toBeVisible();
     await this.deleteButton().click();
   }
 

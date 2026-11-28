@@ -216,21 +216,6 @@
         }
       ],
       "request": {
-        "auth": {
-          "type": "apikey",
-          "apikey": [
-            {
-              "key": "value",
-              "value": "Token {{ownerToken}}",
-              "type": "string"
-            },
-            {
-              "key": "key",
-              "value": "Authorization",
-              "type": "string"
-            }
-          ]
-        },
         "method": "POST",
         "header": [],
         "body": {
@@ -450,9 +435,6 @@
           }
         }
       ],
-      "protocolProfileBehavior": {
-        "disableBodyPruning": true
-      },
       "request": {
         "auth": {
           "type": "apikey",
@@ -471,10 +453,6 @@
         },
         "method": "GET",
         "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\r\n  \"article\": {\r\n    \"title\": \"{{ownerArticleTitle}}\",\r\n    \"description\": \"\",\r\n    \"body\": \"{{newArticleBody}}\",\r\n    \"tagList\": [\r\n      \"qa\",\r\n      \"automation\"\r\n    ]\r\n  }\r\n}"
-        },
         "url": {
           "raw": "{{baseUrl}}/api/articles/{{ownerArticleSlug}}",
           "host": [
@@ -1087,6 +1065,10 @@
               "\r",
               "pm.test(\"Article is unfavorited\", function () {\r",
               "    pm.expect(json.article.favorited).to.eql(false);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Favorites count returns to zero\", function () {\r",
+              "    pm.expect(json.article.favoritesCount).to.eql(0);\r",
               "});"
             ],
             "type": "text/javascript",
@@ -1411,8 +1393,8 @@
       "value": ""
     },
     {
-      "key": "articleCreatedAt",
-      "value": ""
+      "key": "password",
+      "value": "Password_123!"
     },
     {
       "key": "newArticleSlug",
@@ -1456,11 +1438,7 @@
     },
     {
       "key": "unauthorizedUpdateTitle",
-      "value": ""
-    },
-    {
-      "key": "unauthorizedUpdateDescription",
-      "value": ""
+      "value": "Unauthorized Update Attempt"
     },
     {
       "key": "articleTitle",

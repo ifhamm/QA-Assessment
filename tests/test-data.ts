@@ -22,7 +22,6 @@ export function uniqueId(workerIndex = 0): string {
   return `${runId}-w${workerIndex}-${sequence}`;
 }
 
-/** Generates unique user credentials. */
 export function syntheticUser(workerIndex = 0) {
   const id = uniqueId(workerIndex);
   return {
@@ -32,7 +31,6 @@ export function syntheticUser(workerIndex = 0) {
   };
 }
 
-/** Generates unique article payload. */
 export function syntheticArticle(prefix = "Test", workerIndex = 0) {
   const id = uniqueId(workerIndex);
   return {

@@ -15,7 +15,7 @@ import { JWT_STORAGE_KEY } from "../tests/auth-storage";
 import { bestEffortCleanup } from "../tests/cleanup";
 import { syntheticArticle, syntheticUser } from "../tests/test-data";
 
-export type TestUser = AuthUser & {
+type TestUser = AuthUser & {
   password: string;
 };
 
@@ -25,7 +25,7 @@ export type TestUser = AuthUser & {
  * The `slug` is mutable because updating an article through the UI gives it a
  * new slug. A test can point cleanup at the new slug by assigning to it.
  */
-export type TestArticle = {
+type TestArticle = {
   data: ArticleData;
   created: Article;
   slug: string;

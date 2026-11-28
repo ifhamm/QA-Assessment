@@ -7,7 +7,7 @@
  */
 export const JWT_STORAGE_KEY = "jwtToken";
 
-export type AuthStorageState = {
+type AuthStorageState = {
   cookies: [];
   origins: Array<{
     origin: string;
@@ -15,7 +15,6 @@ export type AuthStorageState = {
   }>;
 };
 
-/** Builds a Playwright storage state from an API token. */
 export function buildStorageState(
   baseURL: string,
   token: string
